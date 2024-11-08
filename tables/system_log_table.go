@@ -52,37 +52,12 @@ func (c *SystemLogTable) EnrichRow(row *rows.SystemLog, sourceEnrichmentFields *
 
 	// id & Hive fields
 	row.TpID = xid.New().String()
-	row.TpIndex = *row.Domain
+	row.TpIndex = *row.Uuid
 	row.TpDate = row.Published.Format("2006-01-02")
 
 	// Timestamps
 	row.TpTimestamp = helpers.UnixMillis(row.Published.UnixNano() / int64(time.Millisecond))
 	row.TpIngestTimestamp = helpers.UnixMillis(time.Now().UnixNano() / int64(time.Millisecond))
-
-	// // Other Enrichment Fields
-	// if row.ActorIp != "" {
-		
-	// 	row.TpSourceIP = &row.Ac
-	// 	row.TpIps = append(row.TpIps, row.ActorIp)
-	// }
-
-	// if row.IpChain != nil {
-	// 	// Source IP 
-	// 	result, err := rows.UnmarshalToJSONString(row.IpChain, "slice", "ip", "single")
-	// 	if err != nil {
-
-	// 		return nil, fmt.Errorf("SystemLogTable EnrichRow called with TpSourceIP: %w", err)
-	// 	}
-	// 	ip := result.(string)
-	// 	row.TpSourceIP = &ip
-	// }
-
-	// rows.TpUsernames = 
-
-	// if row.TargetId != nil {
-	// 	row.TpAkas = append(row.TpAkas, *row.TargetId)
-	// 	// TODO: Should row.ProcessId be added to TpAkas?
-	// }
 
 	row.TpUsernames = append(row.TpUsernames, *row.ActorDisplayName, *row.ActorId)
 

@@ -3,8 +3,6 @@ package sources
 import (
 	"context"
 	"fmt"
-	"log/slog"
-	"strconv"
 
 	"github.com/okta/okta-sdk-golang/v5/okta"
 	"github.com/turbot/tailpipe-plugin-okta/rows"
@@ -96,7 +94,7 @@ func (s *SystemLogAPISource) Collect(ctx context.Context) error {
 	// Limiting the results to 500 per page.
 	// Increasing the limit beyond this can result in a "context deadline exceeded" error.
 	// The supported limit range is between 0 and 1000.
-	result, resp, err := client.SystemLogAPI.ListLogEvents(ctx).Limit(500).Execute()
+	result, resp, err := client.SystemLogAPI.ListLogEvents(ctx).Limit(500).SortOrder("DESCENDING").Execute()
 	if err != nil {
 		return fmt.Errorf("error in getting okta system logs: %w", err)
 	}
@@ -123,13 +121,9 @@ func (s *SystemLogAPISource) Collect(ctx context.Context) error {
 		if len(nextSystemLogs) < 500 {
 			break
 		}
-
 	}
 
-	slog.Debug("The length of the result ===>>> ", strconv.Itoa(len(allSystemLogs)), "okk")
-
 	for _, item := range allSystemLogs {
-
 		// check if we've hit previous item - end collection and return if we have
 		// TODO: #collectionState this will fill until we hit record in previous state, but what if we have gaps? [incoming data] -> [data]ENDS-HERE -> [gap] -> [data]
 		if !collectionState.ShouldCollectRow(*item.Published, item.GetUuid()) {

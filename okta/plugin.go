@@ -1,6 +1,8 @@
 package okta
 
 import (
+	"log/slog"
+
 	"github.com/turbot/go-kit/helpers"
 	"github.com/turbot/tailpipe-plugin-okta/config"
 	"github.com/turbot/tailpipe-plugin-okta/sources"
@@ -8,7 +10,6 @@ import (
 	"github.com/turbot/tailpipe-plugin-sdk/plugin"
 	"github.com/turbot/tailpipe-plugin-sdk/row_source"
 	"github.com/turbot/tailpipe-plugin-sdk/table"
-	"log/slog"
 	//"time"
 )
 
@@ -23,8 +24,8 @@ func NewPlugin() (_ plugin.TailpipePlugin, err error) {
 		}
 	}()
 
-	slog.Info("Auth0 Plugin starting")
-	
+	slog.Info("Okta Plugin starting")
+
 	p := &Plugin{
 		PluginImpl: plugin.NewPluginImpl("okta", config.NewOktaConnection),
 	}
