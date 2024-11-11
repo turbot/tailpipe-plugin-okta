@@ -1,8 +1,9 @@
 package tables
 
 import (
+	"encoding/json"
 	"fmt"
-	"time"
+	"log"
 
 	"github.com/rs/xid"
 	"github.com/turbot/tailpipe-plugin-okta/config"
@@ -55,11 +56,62 @@ func (c *SystemLogTable) EnrichRow(row *rows.SystemLog, sourceEnrichmentFields *
 	row.TpIndex = *row.Uuid
 	row.TpDate = row.Published.Format("2006-01-02")
 
+	// Source Ip
+	ipDatails := UnmarshalJSONStringToObhject(row.IpChain)
+
+	if len(ipDatails) > 0 && ipDatails[0].IP != "" {
+		row.TpSourceIP = &ipDatails[0].IP
+	}
+
 	// Timestamps
-	row.TpTimestamp = helpers.UnixMillis(row.Published.UnixNano() / int64(time.Millisecond))
-	row.TpIngestTimestamp = helpers.UnixMillis(time.Now().UnixNano() / int64(time.Millisecond))
+	row.TpTimestamp = *row.Published
+	row.TpIngestTimestamp = *row.Published
 
 	row.TpUsernames = append(row.TpUsernames, *row.ActorDisplayName, *row.ActorId)
 
 	return row, nil
+}
+
+func UnmarshalJSONStringToObhject(str *helpers.JSONString) []IPData {
+	if str == nil {
+		return []IPData{}
+
+	}
+
+	// Slice to hold the decoded JSON data
+	var ipData []IPData
+
+	// Unmarshal the JSON into the struct
+	if err := json.Unmarshal([]byte(*str), &ipData); err != nil {
+		log.Fatalf("Error unmarshalling JSON: %v", err)
+	}
+
+	// Access the "ip" attribute of the first element in the array
+	if len(ipData) > 0 {
+		fmt.Println("IP Address:", ipData[0].IP)
+	} else {
+		fmt.Println("No IP data found.")
+	}
+
+	return ipData
+}
+
+// Define the structure that matches your JSON
+type Geolocation struct {
+	Lat float64 `json:"lat"`
+	Lon float64 `json:"lon"`
+}
+
+type GeographicalContext struct {
+	City        string      `json:"city"`
+	Country     string      `json:"country"`
+	Geolocation Geolocation `json:"geolocation"`
+	PostalCode  string      `json:"postalCode"`
+	State       string      `json:"state"`
+}
+
+type IPData struct {
+	GeographicalContext GeographicalContext `json:"geographicalContext"`
+	IP                  string              `json:"ip"`
+	Version             string              `json:"version"`
 }
