@@ -57,7 +57,7 @@ func (c *SystemLogTable) EnrichRow(row *rows.SystemLog, sourceEnrichmentFields *
 	row.TpDate = row.Published.Format("2006-01-02")
 
 	// Source Ip
-	ipDatails := UnmarshalJSONStringToObhject(row.IpChain)
+	ipDatails := UnmarshalJSONStringToObject(row.IpChain)
 
 	if len(ipDatails) > 0 && ipDatails[0].IP != "" {
 		row.TpSourceIP = &ipDatails[0].IP
@@ -72,7 +72,7 @@ func (c *SystemLogTable) EnrichRow(row *rows.SystemLog, sourceEnrichmentFields *
 	return row, nil
 }
 
-func UnmarshalJSONStringToObhject(str *helpers.JSONString) []IPData {
+func UnmarshalJSONStringToObject(str *helpers.JSONString) []IPData {
 	if str == nil {
 		return []IPData{}
 
