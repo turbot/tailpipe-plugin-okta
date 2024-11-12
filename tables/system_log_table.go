@@ -9,9 +9,9 @@ import (
 	"github.com/turbot/tailpipe-plugin-okta/config"
 	"github.com/turbot/tailpipe-plugin-okta/rows"
 	"github.com/turbot/tailpipe-plugin-sdk/enrichment"
-	"github.com/turbot/tailpipe-plugin-sdk/helpers"
 	"github.com/turbot/tailpipe-plugin-sdk/parse"
 	"github.com/turbot/tailpipe-plugin-sdk/table"
+	"github.com/turbot/tailpipe-plugin-sdk/types"
 )
 
 const SystemLogTableIdentifier = "okta_system_log"
@@ -72,7 +72,7 @@ func (c *SystemLogTable) EnrichRow(row *rows.SystemLog, sourceEnrichmentFields *
 	return row, nil
 }
 
-func UnmarshalJSONStringToObject(str *helpers.JSONString) []IPData {
+func UnmarshalJSONStringToObject(str *types.JSONString) []IPData {
 	if str == nil {
 		return []IPData{}
 

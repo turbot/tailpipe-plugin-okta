@@ -7,7 +7,7 @@ import (
 
 	"github.com/okta/okta-sdk-golang/v5/okta"
 	"github.com/turbot/tailpipe-plugin-sdk/enrichment"
-	"github.com/turbot/tailpipe-plugin-sdk/helpers"
+	"github.com/turbot/tailpipe-plugin-sdk/types"
 )
 
 // SystemLog is the struct containing the enriched data for an AuditRecord
@@ -26,43 +26,43 @@ type SystemLog struct {
 	SubDomain       *string    `json:"sub_domain,omitempty"`
 
 	// Actor fields
-	ActorId                   *string             `json:"actor_id,omitempty"`
-	ActorAlternateId          *string             `json:"actor_alternate_id,omitempty"`
-	ActorDisplayName          *string             `json:"ActorDisplayName,omitempty"`
-	ActorType                 *string             `json:"ActorType,omitempty"`
-	ActorAdditionalProperties *helpers.JSONString `json:"ActorAdditionalProperties,omitempty"`
-	ActorDetailEntry          *helpers.JSONString `json:"ActorDetailEntry,omitempty"`
+	ActorId                   *string           `json:"actor_id,omitempty"`
+	ActorAlternateId          *string           `json:"actor_alternate_id,omitempty"`
+	ActorDisplayName          *string           `json:"ActorDisplayName,omitempty"`
+	ActorType                 *string           `json:"ActorType,omitempty"`
+	ActorAdditionalProperties *types.JSONString `json:"ActorAdditionalProperties,omitempty"`
+	ActorDetailEntry          *types.JSONString `json:"ActorDetailEntry,omitempty"`
 
 	// AuthenticationContext fields
-	AuthenticationProvider             *string             `json:"authenticationProvider,omitempty"`
-	AuthenticationStep                 *int32              `json:"authenticationStep,omitempty"`
-	CredentialProvider                 *string             `json:"credentialProvider,omitempty"`
-	CredentialType                     *string             `json:"credentialType,omitempty"`
-	ExternalSessionId                  *string             `json:"externalSessionId,omitempty"`
-	Interface                          *string             `json:"interface,omitempty"`
-	Issuer                             *helpers.JSONString `json:"issuer,omitempty"`
-	AuthenticationAdditionalProperties *helpers.JSONString
+	AuthenticationProvider             *string           `json:"authenticationProvider,omitempty"`
+	AuthenticationStep                 *int32            `json:"authenticationStep,omitempty"`
+	CredentialProvider                 *string           `json:"credentialProvider,omitempty"`
+	CredentialType                     *string           `json:"credentialType,omitempty"`
+	ExternalSessionId                  *string           `json:"externalSessionId,omitempty"`
+	Interface                          *string           `json:"interface,omitempty"`
+	Issuer                             *types.JSONString `json:"issuer,omitempty"`
+	AuthenticationAdditionalProperties *types.JSONString
 
 	// Client fields
-	ClientDevice               *string             `json:"device,omitempty"`
-	ClientGeographicalContext  *helpers.JSONString `json:"geographicalContext,omitempty"`
-	ClientId                   *string             `json:"id,omitempty"`
-	ClientIpAddress            *string             `json:"ipAddress,omitempty"`
-	ClientUserAgent            *helpers.JSONString `json:"userAgent,omitempty"`
-	ClientZone                 *string             `json:"zone,omitempty"`
-	ClientAdditionalProperties *helpers.JSONString
+	ClientDevice               *string           `json:"device,omitempty"`
+	ClientGeographicalContext  *types.JSONString `json:"geographicalContext,omitempty"`
+	ClientId                   *string           `json:"id,omitempty"`
+	ClientIpAddress            *string           `json:"ipAddress,omitempty"`
+	ClientUserAgent            *types.JSONString `json:"userAgent,omitempty"`
+	ClientZone                 *string           `json:"zone,omitempty"`
+	ClientAdditionalProperties *types.JSONString
 
 	// LogDebugContext fields
-	DebugData                 *helpers.JSONString `json:"debugData,omitempty"`
-	DebugAdditionalProperties *helpers.JSONString
+	DebugData                 *types.JSONString `json:"debugData,omitempty"`
+	DebugAdditionalProperties *types.JSONString
 
 	// Outcome fields
 	OutcomeReason               *string `json:"Outcome_reason,omitempty"`
 	OutcomeResult               *string `json:"Outcome_result,omitempty"`
-	OutcomeAdditionalProperties *helpers.JSONString
+	OutcomeAdditionalProperties *types.JSONString
 
 	// Request fields
-	IpChain *helpers.JSONString
+	IpChain *types.JSONString
 
 	// SecurityContext field
 	AsNumber *int32  `json:"asNumber,omitempty"`
@@ -71,14 +71,14 @@ type SystemLog struct {
 	Isp      *string `json:"isp,omitempty"`
 	IsProxy  *bool   `json:"isProxy,omitempty"`
 
-	Target *helpers.JSONString `json:"target,omitempty"`
+	Target *types.JSONString `json:"target,omitempty"`
 
 	// Transaction fields
-	TransactionId     *string             `json:"TransactionId,omitempty"`
-	TransactionType   *string             `json:"TransactionType,omitempty"`
-	TransactionDetail *helpers.JSONString `json:"TransactionDetail,omitempty"`
+	TransactionId     *string           `json:"TransactionId,omitempty"`
+	TransactionType   *string           `json:"TransactionType,omitempty"`
+	TransactionDetail *types.JSONString `json:"TransactionDetail,omitempty"`
 
-	AdditionalProperties *helpers.JSONString
+	AdditionalProperties *types.JSONString
 }
 
 func (a *SystemLog) MapFromOktaSystemLog(item okta.LogEvent) error {
@@ -157,7 +157,7 @@ func (a *SystemLog) MapFromOktaSystemLog(item okta.LogEvent) error {
 	return nil
 }
 
-func marshalAnyFormatToJSONString(data any) *helpers.JSONString {
+func marshalAnyFormatToJSONString(data any) *types.JSONString {
 	if data == nil {
 		return nil
 	}
@@ -165,7 +165,7 @@ func marshalAnyFormatToJSONString(data any) *helpers.JSONString {
 	if err != nil {
 		panic(fmt.Errorf("error marshalling row data: %w", err))
 	}
-	dataJsonString := helpers.JSONString(s)
+	dataJsonString := types.JSONString(s)
 
 	return &dataJsonString
 }
