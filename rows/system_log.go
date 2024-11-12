@@ -23,6 +23,7 @@ type SystemLog struct {
 	Severity        *string    `json:"severity,omitempty"`
 	Uuid            *string    `json:"uuid,omitempty"`
 	Version         *string    `json:"version,omitempty"`
+	SubDomain       *string    `json:"sub_domain,omitempty"`
 
 	// Actor fields
 	ActorId                   *string             `json:"actor_id,omitempty"`

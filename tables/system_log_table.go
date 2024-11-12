@@ -53,7 +53,7 @@ func (c *SystemLogTable) EnrichRow(row *rows.SystemLog, sourceEnrichmentFields *
 
 	// id & Hive fields
 	row.TpID = xid.New().String()
-	row.TpIndex = *row.Uuid
+	row.TpIndex = *row.SubDomain
 	row.TpDate = row.Published.Format("2006-01-02")
 
 	// Source Ip

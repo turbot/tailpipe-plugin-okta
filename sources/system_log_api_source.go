@@ -3,6 +3,7 @@ package sources
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/okta/okta-sdk-golang/v5/okta"
 	"github.com/turbot/tailpipe-plugin-okta/rows"
@@ -82,6 +83,7 @@ func (s *SystemLogAPISource) Collect(ctx context.Context) error {
 
 	// Create a client
 	client := okta.NewAPIClient(configuration)
+	subDomain := strings.Split(strings.Replace(*s.Config.Domain, "https://", "", 2), "/")[0]
 
 	// populate enrichment fields the source is aware of
 	// - in this case the connection
@@ -135,6 +137,9 @@ func (s *SystemLogAPISource) Collect(ctx context.Context) error {
 		if err != nil {
 			return fmt.Errorf("error converting audit log item to row data: %w", err)
 		}
+
+		// TODO: Revise the index value to be populated from the event data instead of the configuration.
+		rowData.SubDomain = &subDomain
 		// populate artifact data
 		row := &types.RowData{Data: rowData, Metadata: sourceEnrichmentFields}
 
