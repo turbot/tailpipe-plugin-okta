@@ -50,10 +50,8 @@ func (s *SystemLogAPISource) GetConfigSchema() parse.Config {
 func (s *SystemLogAPISource) Collect(ctx context.Context) error {
 	// NOTE: The API only allows fetching from newest to oldest, so we need to collect in reverse order until we've hit a previously obtained item.
 	collectionState := s.CollectionState.(*collection_state.TimeRangeCollectionState[*SystemLogAPISourceConfig])
-	// TODO: #config the below should be settable via a config option
 	collectionState.IsChronological = false
 	collectionState.HasContinuation = false
-	// TODO: #collectionState is there a way we can call StartCollection/EndCollection from elsewhere to enforce it?
 	collectionState.StartCollection()
 
 	// Initialize variable with default value
@@ -88,6 +86,7 @@ func (s *SystemLogAPISource) Collect(ctx context.Context) error {
 
 	// Create a client
 	client := okta.NewAPIClient(configuration)
+	// TODO: review this, should we get the details from config? This is being used as TpIndex.
 	subDomain := strings.Split(strings.Replace(*s.Config.Domain, "https://", "", 2), "/")[0]
 
 	// populate enrichment fields the source is aware of
@@ -95,7 +94,7 @@ func (s *SystemLogAPISource) Collect(ctx context.Context) error {
 	tpSource := fmt.Sprint(SystemLogAPISourceIdentifier)
 	sourceEnrichmentFields := &enrichment.CommonFields{
 		TpSourceName:     &tpSource,
-		TpSourceType:     SystemLogAPISourceIdentifier, // TODO: review this
+		TpSourceType:     SystemLogAPISourceIdentifier, 
 		TpSourceLocation: s.Config.Domain,
 	}
 
