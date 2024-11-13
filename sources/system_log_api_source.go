@@ -17,6 +17,11 @@ import (
 
 const SystemLogAPISourceIdentifier = "okta_system_log_api"
 
+// register the source from the package init function
+func init() {
+	row_source.Factory.RegisterRowSource(NewSystemLogAPISource)
+}
+
 // SystemLogAPISource source is responsible for collecting audit logs from Turbot Okta API
 type SystemLogAPISource struct {
 	row_source.RowSourceImpl[*SystemLogAPISourceConfig]
@@ -87,8 +92,9 @@ func (s *SystemLogAPISource) Collect(ctx context.Context) error {
 
 	// populate enrichment fields the source is aware of
 	// - in this case the connection
+	tpSource := fmt.Sprint(SystemLogAPISourceIdentifier)
 	sourceEnrichmentFields := &enrichment.CommonFields{
-		TpSourceName:     SystemLogAPISourceIdentifier,
+		TpSourceName:     &tpSource,
 		TpSourceType:     SystemLogAPISourceIdentifier, // TODO: review this
 		TpSourceLocation: s.Config.Domain,
 	}

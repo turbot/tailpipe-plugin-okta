@@ -5,12 +5,12 @@ import (
 
 	"github.com/turbot/go-kit/helpers"
 	"github.com/turbot/tailpipe-plugin-okta/config"
-	"github.com/turbot/tailpipe-plugin-okta/sources"
-	"github.com/turbot/tailpipe-plugin-okta/tables"
 	"github.com/turbot/tailpipe-plugin-sdk/plugin"
-	"github.com/turbot/tailpipe-plugin-sdk/row_source"
 	"github.com/turbot/tailpipe-plugin-sdk/table"
-	//"time"
+
+	// reference the table package to ensure that the tables are registered by the init functions
+	_ "github.com/turbot/tailpipe-plugin-okta/tables"
+	_ "github.com/turbot/tailpipe-plugin-okta/sources"
 )
 
 type Plugin struct {
@@ -30,13 +30,8 @@ func NewPlugin() (_ plugin.TailpipePlugin, err error) {
 		PluginImpl: plugin.NewPluginImpl("okta", config.NewOktaConnection),
 	}
 
-	// register the tables, sources and mappers that we provide
-	resources := &plugin.ResourceFunctions{
-		Tables:  []func() table.Table{tables.NewSystemLogTable},
-		Sources: []func() row_source.RowSource{sources.NewSystemLogAPISource},
-	}
-
-	if err := p.RegisterResources(resources); err != nil {
+	// initialise table factory
+	if err := table.Factory.Init(); err != nil {
 		return nil, err
 	}
 

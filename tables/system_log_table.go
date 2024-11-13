@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/rs/xid"
 	"github.com/turbot/tailpipe-plugin-okta/config"
@@ -16,12 +17,17 @@ import (
 
 const SystemLogTableIdentifier = "okta_system_log"
 
+// register the table from the package init function
+func init() {
+	table.RegisterTable(NewSystemLogTable)
+}
+
 type SystemLogTable struct {
 	// all tables must embed table.TableImpl
 	table.TableImpl[*rows.SystemLog, *SystemLogTableConfig, *config.OktaConnection]
 }
 
-func NewSystemLogTable() table.Table {
+func NewSystemLogTable() table.Enricher[*rows.SystemLog] {
 	return &SystemLogTable{}
 }
 
@@ -31,7 +37,7 @@ func (c *SystemLogTable) Identifier() string {
 
 // GetRowSchema implements Table
 // return an instance of the row struct
-func (c *SystemLogTable) GetRowSchema() any {
+func (c *SystemLogTable) GetRowSchema() types.RowStruct {
 	return rows.SystemLog{}
 }
 
@@ -45,7 +51,7 @@ func (c *SystemLogTable) EnrichRow(row *rows.SystemLog, sourceEnrichmentFields *
 		return nil, fmt.Errorf("SystemLogTable EnrichRow called with nil sourceEnrichmentFields")
 	}
 	// we expect name to be set by the Source
-	if sourceEnrichmentFields.TpSourceName == "" {
+	if sourceEnrichmentFields.TpSourceName == nil {
 		return nil, fmt.Errorf("SystemLogTable EnrichRow called with TpSourceName unset in sourceEnrichmentFields")
 	}
 
@@ -54,7 +60,9 @@ func (c *SystemLogTable) EnrichRow(row *rows.SystemLog, sourceEnrichmentFields *
 	// id & Hive fields
 	row.TpID = xid.New().String()
 	row.TpIndex = *row.SubDomain
-	row.TpDate = row.Published.Format("2006-01-02")
+	row.TpTimestamp = *row.Published
+	row.TpIngestTimestamp = time.Now()
+	row.TpDate = row.Published.Truncate(24 * time.Hour)
 
 	// Source Ip
 	ipDatails := UnmarshalJSONStringToObject(row.IpChain)

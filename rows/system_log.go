@@ -169,39 +169,3 @@ func marshalAnyFormatToJSONString(data any) *types.JSONString {
 
 	return &dataJsonString
 }
-
-// TODO: Need to work on how to filter the IPs from the type *helpers.JSONString
-
-// func UnmarshalToJSONString(str *helpers.JSONString, dataType string, property string, numberOfproperty string) (result interface{}, err error) {
-// 	var res interface{}
-// 	data := []byte{}
-// 	err = str.UnmarshalJSON(data)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	if err := json.Unmarshal(data, &res); err != nil {
-// 		return nil, fmt.Errorf("error unmarshalling JSON: %w", err)
-// 	}
-
-// 	switch dataType {
-// 	case "map":
-// 		r := res.(map[string]interface{})
-// 		return r[property], nil
-// 	case "slice":
-// 		var mapSlice []interface{}
-// 		for _, item := range res.([]interface{}) {
-// 			if mapItem, ok := item.(map[string]interface{}); ok {
-// 				if numberOfproperty == "single" {
-// 					return mapItem[property], nil
-// 				}
-// 				mapSlice = append(mapSlice, mapItem[property])
-// 			}
-// 		}
-// 		return mapSlice, nil
-// 	default:
-// 		// Do nothing
-// 	}
-
-// 	return nil, nil
-// }
