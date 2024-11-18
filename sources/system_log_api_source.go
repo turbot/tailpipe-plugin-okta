@@ -3,14 +3,12 @@ package sources
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/okta/okta-sdk-golang/v5/okta"
-	"github.com/turbot/tailpipe-plugin-okta/rows"
+
 	"github.com/turbot/tailpipe-plugin-sdk/collection_state"
 	"github.com/turbot/tailpipe-plugin-sdk/config_data"
 	"github.com/turbot/tailpipe-plugin-sdk/enrichment"
-	"github.com/turbot/tailpipe-plugin-sdk/parse"
 	"github.com/turbot/tailpipe-plugin-sdk/row_source"
 	"github.com/turbot/tailpipe-plugin-sdk/types"
 )
@@ -19,16 +17,12 @@ const SystemLogAPISourceIdentifier = "okta_system_log_api"
 
 // register the source from the package init function
 func init() {
-	row_source.Factory.RegisterRowSource(NewSystemLogAPISource)
+	row_source.RegisterRowSource[*SystemLogAPISource]()
 }
 
 // SystemLogAPISource source is responsible for collecting audit logs from Turbot Okta API
 type SystemLogAPISource struct {
 	row_source.RowSourceImpl[*SystemLogAPISourceConfig]
-}
-
-func NewSystemLogAPISource() row_source.RowSource {
-	return &SystemLogAPISource{}
 }
 
 func (s *SystemLogAPISource) Init(ctx context.Context, configData config_data.ConfigData, opts ...row_source.RowSourceOption) error {
@@ -41,10 +35,6 @@ func (s *SystemLogAPISource) Init(ctx context.Context, configData config_data.Co
 
 func (s *SystemLogAPISource) Identifier() string {
 	return SystemLogAPISourceIdentifier
-}
-
-func (s *SystemLogAPISource) GetConfigSchema() parse.Config {
-	return &SystemLogAPISourceConfig{}
 }
 
 func (s *SystemLogAPISource) Collect(ctx context.Context) error {
@@ -86,15 +76,13 @@ func (s *SystemLogAPISource) Collect(ctx context.Context) error {
 
 	// Create a client
 	client := okta.NewAPIClient(configuration)
-	// TODO: review this, should we get the details from config? This is being used as TpIndex.
-	subDomain := strings.Split(strings.Replace(*s.Config.Domain, "https://", "", 2), "/")[0]
 
 	// populate enrichment fields the source is aware of
 	// - in this case the connection
 	tpSource := fmt.Sprint(SystemLogAPISourceIdentifier)
 	sourceEnrichmentFields := &enrichment.CommonFields{
 		TpSourceName:     &tpSource,
-		TpSourceType:     SystemLogAPISourceIdentifier, 
+		TpSourceType:     SystemLogAPISourceIdentifier,
 		TpSourceLocation: s.Config.Domain,
 	}
 
@@ -137,16 +125,9 @@ func (s *SystemLogAPISource) Collect(ctx context.Context) error {
 			collectionState.EndCollection()
 			return nil
 		}
-		rowData := &rows.SystemLog{}
-		err = rowData.MapFromOktaSystemLog(item)
-		if err != nil {
-			return fmt.Errorf("error converting audit log item to row data: %w", err)
-		}
 
-		// TODO: Revise the index value to be populated from the event data instead of the configuration.
-		rowData.SubDomain = &subDomain
 		// populate artifact data
-		row := &types.RowData{Data: rowData, Metadata: sourceEnrichmentFields}
+		row := &types.RowData{Data: item, Metadata: sourceEnrichmentFields}
 
 		// update collection state
 		collectionState.Upsert(*item.Published, *item.Uuid, nil)

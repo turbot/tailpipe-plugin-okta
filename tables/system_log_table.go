@@ -4,13 +4,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"slices"
+	"strings"
 	"time"
 
+	"github.com/okta/okta-sdk-golang/v5/okta"
 	"github.com/rs/xid"
+
 	"github.com/turbot/tailpipe-plugin-okta/config"
+	"github.com/turbot/tailpipe-plugin-okta/mappers"
 	"github.com/turbot/tailpipe-plugin-okta/rows"
+	"github.com/turbot/tailpipe-plugin-okta/sources"
 	"github.com/turbot/tailpipe-plugin-sdk/enrichment"
-	"github.com/turbot/tailpipe-plugin-sdk/parse"
 	"github.com/turbot/tailpipe-plugin-sdk/table"
 	"github.com/turbot/tailpipe-plugin-sdk/types"
 )
@@ -19,7 +24,7 @@ const SystemLogTableIdentifier = "okta_system_log"
 
 // register the table from the package init function
 func init() {
-	table.RegisterTable(NewSystemLogTable)
+	table.RegisterTable[*rows.SystemLog, *SystemLogTable]()
 }
 
 type SystemLogTable struct {
@@ -27,22 +32,17 @@ type SystemLogTable struct {
 	table.TableImpl[*rows.SystemLog, *SystemLogTableConfig, *config.OktaConnection]
 }
 
-func NewSystemLogTable() table.Enricher[*rows.SystemLog] {
-	return &SystemLogTable{}
-}
-
 func (c *SystemLogTable) Identifier() string {
 	return SystemLogTableIdentifier
 }
 
-// GetRowSchema implements Table
-// return an instance of the row struct
-func (c *SystemLogTable) GetRowSchema() types.RowStruct {
-	return rows.SystemLog{}
-}
-
-func (c *SystemLogTable) GetConfigSchema() parse.Config {
-	return &SystemLogTableConfig{}
+func (c *SystemLogTable) SupportedSources() []*table.SourceMetadata[*rows.SystemLog] {
+	return []*table.SourceMetadata[*rows.SystemLog]{
+		{
+			SourceName: sources.SystemLogAPISourceIdentifier,
+			MapperFunc: mappers.NewSystemLogMapper,
+		},
+	}
 }
 
 func (c *SystemLogTable) EnrichRow(row *rows.SystemLog, sourceEnrichmentFields *enrichment.CommonFields) (*rows.SystemLog, error) {
@@ -57,37 +57,56 @@ func (c *SystemLogTable) EnrichRow(row *rows.SystemLog, sourceEnrichmentFields *
 
 	row.CommonFields = *sourceEnrichmentFields
 
+	subDomain := strings.Split(strings.Replace(*sourceEnrichmentFields.TpSourceLocation, "https://", "", 2), "/")[0]
+
 	// id & Hive fields
 	row.TpID = xid.New().String()
-	row.TpIndex = *row.SubDomain
+	row.TpIndex = subDomain
 	row.TpTimestamp = *row.Published
 	row.TpIngestTimestamp = time.Now()
 	row.TpDate = row.Published.Truncate(24 * time.Hour)
 
-	// Source Ip
-	ipDatails := UnmarshalJSONStringToObject(row.IpChain)
-
-	if len(ipDatails) > 0 && ipDatails[0].IP != "" {
-		row.TpSourceIP = &ipDatails[0].IP
+	// IP enrichment
+	if row.ClientIpAddress != nil {
+		row.TpSourceIP = row.ClientIpAddress
+		row.TpIps = append(row.TpIps, *row.ClientIpAddress)
+	}
+	ipChain := UnmarshalJSONStringToObject(row.IpChain)
+	if len(ipChain) > 0 {
+		row.TpDestinationIP = ipChain[len(ipChain)-1].Ip
+	}
+	for _, ip := range ipChain {
+		if !slices.Contains(row.TpIps, *ip.Ip) {
+			row.TpIps = append(row.TpIps, *ip.Ip)
+		}
 	}
 
-	// Timestamps
-	row.TpTimestamp = *row.Published
-	row.TpIngestTimestamp = *row.Published
+	// User enrichment
+	if row.ActorId != nil {
+		row.TpUsernames = append(row.TpUsernames, *row.ActorId)
+	}
+	if row.ActorDisplayName != nil {
+		row.TpUsernames = append(row.TpUsernames, *row.ActorDisplayName)
+	}
+	if row.ActorAlternateId != nil {
+		row.TpUsernames = append(row.TpUsernames, *row.ActorAlternateId)
+	}
 
-	row.TpUsernames = append(row.TpUsernames, *row.ActorDisplayName, *row.ActorId)
+	// Domain enrichment
+	if row.Domain != nil {
+		row.TpDomains = append(row.TpDomains, *row.Domain)
+	}
 
 	return row, nil
 }
 
-func UnmarshalJSONStringToObject(str *types.JSONString) []IPData {
+func UnmarshalJSONStringToObject(str *types.JSONString) []okta.LogIpAddress {
 	if str == nil {
-		return []IPData{}
-
+		return []okta.LogIpAddress{}
 	}
 
 	// Slice to hold the decoded JSON data
-	var ipData []IPData
+	var ipData []okta.LogIpAddress
 
 	// Unmarshal the JSON into the struct
 	if err := json.Unmarshal([]byte(*str), &ipData); err != nil {
@@ -96,30 +115,10 @@ func UnmarshalJSONStringToObject(str *types.JSONString) []IPData {
 
 	// Access the "ip" attribute of the first element in the array
 	if len(ipData) > 0 {
-		fmt.Println("IP Address:", ipData[0].IP)
+		fmt.Println("IP Address:", ipData[0].Ip)
 	} else {
 		fmt.Println("No IP data found.")
 	}
 
 	return ipData
-}
-
-// Define the structure that matches your JSON
-type Geolocation struct {
-	Lat float64 `json:"lat"`
-	Lon float64 `json:"lon"`
-}
-
-type GeographicalContext struct {
-	City        string      `json:"city"`
-	Country     string      `json:"country"`
-	Geolocation Geolocation `json:"geolocation"`
-	PostalCode  string      `json:"postalCode"`
-	State       string      `json:"state"`
-}
-
-type IPData struct {
-	GeographicalContext GeographicalContext `json:"geographicalContext"`
-	IP                  string              `json:"ip"`
-	Version             string              `json:"version"`
 }
