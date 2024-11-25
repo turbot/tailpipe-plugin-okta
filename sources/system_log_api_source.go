@@ -63,8 +63,8 @@ func (s *SystemLogAPISource) Collect(ctx context.Context) error {
 
 	// Create a default configuration
 	configuration, err := okta.NewConfiguration(
-		okta.WithOrgUrl(*s.Config.Domain),
-		okta.WithToken(*s.Config.Token),
+		okta.WithOrgUrl(*s.Connection.Domain),
+		okta.WithToken(*s.Connection.Token),
 		okta.WithRateLimitMaxBackOff(maxBackoff),
 		okta.WithRateLimitMaxRetries(maxRetries),
 		okta.WithRequestTimeout(requestTimeout),
@@ -84,7 +84,7 @@ func (s *SystemLogAPISource) Collect(ctx context.Context) error {
 	sourceEnrichmentFields := &enrichment.CommonFields{
 		TpSourceName:     &tpSource,
 		TpSourceType:     SystemLogAPISourceIdentifier,
-		TpSourceLocation: s.Config.Domain,
+		TpSourceLocation: s.Connection.Domain,
 	}
 
 	// Limiting the results to 500 per page.
