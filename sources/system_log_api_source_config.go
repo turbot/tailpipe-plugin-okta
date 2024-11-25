@@ -26,3 +26,8 @@ func (c *SystemLogAPISourceConfig) Validate() error {
 	}
 	return nil
 }
+
+func (c *SystemLogAPISourceConfig) Identifier() string {
+	return SystemLogAPISourceIdentifier
+
+}

@@ -11,7 +11,6 @@ import (
 	"github.com/okta/okta-sdk-golang/v5/okta"
 	"github.com/rs/xid"
 
-	"github.com/turbot/tailpipe-plugin-okta/config"
 	"github.com/turbot/tailpipe-plugin-okta/mappers"
 	"github.com/turbot/tailpipe-plugin-okta/rows"
 	"github.com/turbot/tailpipe-plugin-okta/sources"
@@ -24,19 +23,21 @@ const SystemLogTableIdentifier = "okta_system_log"
 
 // register the table from the package init function
 func init() {
-	table.RegisterTable[*rows.SystemLog, *SystemLogTable]()
+	// Register the table, with type parameters:
+	// 1. row struct
+	// 2. table config struct
+	// 3. table implementation
+	table.RegisterTable[*rows.SystemLog, *SystemLogTableConfig, *SystemLogTable]()
 }
 
 type SystemLogTable struct {
-	// all tables must embed table.TableImpl
-	table.TableImpl[*rows.SystemLog, *SystemLogTableConfig, *config.OktaConnection]
 }
 
 func (c *SystemLogTable) Identifier() string {
 	return SystemLogTableIdentifier
 }
 
-func (c *SystemLogTable) SupportedSources() []*table.SourceMetadata[*rows.SystemLog] {
+func (c *SystemLogTable) SupportedSources(_ *SystemLogTableConfig) []*table.SourceMetadata[*rows.SystemLog] {
 	return []*table.SourceMetadata[*rows.SystemLog]{
 		{
 			SourceName: sources.SystemLogAPISourceIdentifier,
