@@ -23,7 +23,7 @@ func (s SystemLogMapper) Identifier() string {
 	return "okta_system_log_mapper"
 }
 
-func (s SystemLogMapper) Map(ctx context.Context, a any) ([]*rows.SystemLog, error) {
+func (s SystemLogMapper) Map(ctx context.Context, a any) (*rows.SystemLog, error) {
 	systemLog := &rows.SystemLog{}
 	rawRow, ok := a.(okta.LogEvent)
 	if !ok {
@@ -101,7 +101,7 @@ func (s SystemLogMapper) Map(ctx context.Context, a any) ([]*rows.SystemLog, err
 
 	systemLog.AdditionalProperties = marshalAnyFormatToJSONString(rawRow.AdditionalProperties)
 
-	return []*rows.SystemLog{systemLog}, nil
+	return systemLog, nil
 }
 
 func marshalAnyFormatToJSONString(data any) *types.JSONString {
