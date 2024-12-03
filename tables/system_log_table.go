@@ -16,7 +16,6 @@ import (
 	"github.com/turbot/tailpipe-plugin-okta/sources"
 	"github.com/turbot/tailpipe-plugin-sdk/enrichment"
 	"github.com/turbot/tailpipe-plugin-sdk/table"
-	"github.com/turbot/tailpipe-plugin-sdk/types"
 )
 
 const SystemLogTableIdentifier = "okta_system_log"
@@ -101,20 +100,39 @@ func (c *SystemLogTable) EnrichRow(row *rows.SystemLog, sourceEnrichmentFields *
 	return row, nil
 }
 
-func UnmarshalJSONStringToObject(str *types.JSONString) []okta.LogIpAddress {
-	if str == nil {
+func UnmarshalJSONStringToObject(data []*map[string]interface{}) []okta.LogIpAddress {
+	if data == nil || len(data) == 0 {
 		return []okta.LogIpAddress{}
 	}
 
 	// Slice to hold the decoded JSON data
 	var ipData []okta.LogIpAddress
 
-	// Unmarshal the JSON into the struct
-	if err := json.Unmarshal([]byte(*str), &ipData); err != nil {
-		log.Fatalf("Error unmarshalling JSON: %v", err)
+	// Iterate over each map pointer in the input slice
+	for _, item := range data {
+		if item == nil {
+			continue
+		}
+
+		// Marshal the map[string]interface{} back to JSON
+		jsonData, err := json.Marshal(*item)
+		if err != nil {
+			log.Printf("Error marshalling map to JSON: %v", err)
+			continue
+		}
+
+		// Unmarshal the JSON into the struct
+		var tempIpData []okta.LogIpAddress
+		if err := json.Unmarshal(jsonData, &tempIpData); err != nil {
+			log.Printf("Error unmarshalling JSON to struct: %v", err)
+			continue
+		}
+
+		// Append the unmarshalled data to the result slice
+		ipData = append(ipData, tempIpData...)
 	}
 
-	// Access the "ip" attribute of the first element in the array
+	// Debugging: Print the "ip" attribute of the first element in the array
 	if len(ipData) > 0 {
 		fmt.Println("IP Address:", ipData[0].Ip)
 	} else {

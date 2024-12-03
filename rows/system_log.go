@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/turbot/tailpipe-plugin-sdk/enrichment"
-	"github.com/turbot/tailpipe-plugin-sdk/types"
 )
 
 // SystemLog is the struct containing the enriched data for an AuditRecord
@@ -23,55 +22,55 @@ type SystemLog struct {
 	SubDomain       *string    `json:"sub_domain,omitempty"`
 
 	// Actor fields
-	ActorId                   *string           `json:"actor_id,omitempty"`
-	ActorAlternateId          *string           `json:"actor_alternate_id,omitempty"`
-	ActorDisplayName          *string           `json:"actor_display_name,omitempty"`
-	ActorType                 *string           `json:"actor_type,omitempty"`
-	ActorAdditionalProperties *types.JSONString `json:"actor_additional_properties,omitempty"`
-	ActorDetailEntry          *types.JSONString `json:"actor_detail_entry,omitempty"`
+	ActorId                   *string                 `json:"actor_id,omitempty"`
+	ActorAlternateId          *string                 `json:"actor_alternate_id,omitempty"`
+	ActorDisplayName          *string                 `json:"actor_display_name,omitempty"`
+	ActorType                 *string                 `json:"actor_type,omitempty"`
+	ActorAdditionalProperties *map[string]interface{} `json:"actor_additional_properties,omitempty" parquet:"name=actor_additional_properties, type=JSON"`
+	ActorDetailEntry          *map[string]interface{} `json:"actor_detail_entry,omitempty" parquet:"name=actor_detail_entry, type=JSON"`
 
 	// AuthenticationContext fields
-	AuthenticationProvider             *string           `json:"authentication_provider,omitempty"`
-	AuthenticationStep                 *int32            `json:"authentication_step,omitempty"`
-	CredentialProvider                 *string           `json:"credential_provider,omitempty"`
-	CredentialType                     *string           `json:"credential_type,omitempty"`
-	ExternalSessionId                  *string           `json:"external_session_id,omitempty"`
-	Interface                          *string           `json:"interface,omitempty"`
-	Issuer                             *types.JSONString `json:"issuer,omitempty"`
-	AuthenticationAdditionalProperties *types.JSONString `json:"authentication_additional_properties,omitempty"`
+	AuthenticationProvider             *string                 `json:"authentication_provider,omitempty"`
+	AuthenticationStep                 *int32                  `json:"authentication_step,omitempty"`
+	CredentialProvider                 *string                 `json:"credential_provider,omitempty"`
+	CredentialType                     *string                 `json:"credential_type,omitempty"`
+	ExternalSessionId                  *string                 `json:"external_session_id,omitempty"`
+	Interface                          *string                 `json:"interface,omitempty"`
+	Issuer                             *map[string]interface{} `json:"issuer,omitempty" parquet:"name=issuer, type=JSON"`
+	AuthenticationAdditionalProperties *map[string]interface{} `json:"authentication_additional_properties,omitempty" parquet:"name=authentication_additional_properties, type=JSON"`
 
 	// Client fields
-	ClientDevice               *string           `json:"client_device,omitempty"`
-	ClientGeographicalContext  *types.JSONString `json:"client_geographical_context,omitempty"`
-	ClientId                   *string           `json:"client_id,omitempty"`
-	ClientIpAddress            *string           `json:"client_ip_address,omitempty"`
-	ClientUserAgent            *types.JSONString `json:"client_user_agent,omitempty"`
-	ClientZone                 *string           `json:"client_zone,omitempty"`
-	ClientAdditionalProperties *types.JSONString `json:"client_additional_properties,omitempty"`
+	ClientDevice               *string                 `json:"client_device,omitempty"`
+	ClientGeographicalContext  *map[string]interface{} `json:"client_geographical_context,omitempty" parquet:"name=client_geographical_context, type=JSON"`
+	ClientId                   *string                 `json:"client_id,omitempty"`
+	ClientIpAddress            *string                 `json:"client_ip_address,omitempty"`
+	ClientUserAgent            *map[string]interface{} `json:"client_user_agent,omitempty" parquet:"name=client_user_agent, type=JSON"`
+	ClientZone                 *string                 `json:"client_zone,omitempty"`
+	ClientAdditionalProperties *map[string]interface{} `json:"client_additional_properties,omitempty" parquet:"name=client_additional_properties, type=JSON"`
 
 	// LogDebugContext fields
-	DebugData                 *types.JSONString `json:"debug_data,omitempty"`
-	DebugAdditionalProperties *types.JSONString `json:"debug_additional_properties,omitempty"`
+	DebugData                 *map[string]interface{} `json:"debug_data,omitempty" parquet:"name=debug_data, type=JSON"`
+	DebugAdditionalProperties *map[string]interface{} `json:"debug_additional_properties,omitempty" parquet:"name=debug_additional_properties, type=JSON"`
 
 	// Outcome fields
-	OutcomeReason               *string           `json:"outcome_reason,omitempty"`
-	OutcomeResult               *string           `json:"outcome_result,omitempty"`
-	OutcomeAdditionalProperties *types.JSONString `json:"outcome_additional_properties,omitempty"`
+	OutcomeReason               *string                 `json:"outcome_reason,omitempty"`
+	OutcomeResult               *string                 `json:"outcome_result,omitempty"`
+	OutcomeAdditionalProperties *map[string]interface{} `json:"outcome_additional_properties,omitempty" parquet:"name=outcome_additional_properties, type=JSON"`
 
 	// Request fields
-	IpChain *types.JSONString `json:"ip_chain,omitempty"`
+	IpChain []*map[string]interface{} `json:"ip_chain,omitempty" parquet:"name=ip_chain, type=JSON"`
 
 	// SecurityContext field
-	AsNumber *int32            `json:"as_number,omitempty"`
-	AsOrg    *string           `json:"as_org,omitempty"`
-	Domain   *string           `json:"domain,omitempty"`
-	Isp      *string           `json:"isp,omitempty"`
-	IsProxy  *bool             `json:"is_proxy,omitempty"`
-	Target   *types.JSONString `json:"target,omitempty"`
+	AsNumber *int32                    `json:"as_number,omitempty"`
+	AsOrg    *string                   `json:"as_org,omitempty"`
+	Domain   *string                   `json:"domain,omitempty"`
+	Isp      *string                   `json:"isp,omitempty"`
+	IsProxy  *bool                     `json:"is_proxy,omitempty"`
+	Target   []*map[string]interface{} `json:"target,omitempty" parquet:"name=target, type=JSON"`
 
 	// Transaction fields
-	TransactionId        *string           `json:"transaction_id,omitempty"`
-	TransactionType      *string           `json:"transaction_type,omitempty"`
-	TransactionDetail    *types.JSONString `json:"transaction_detail,omitempty"`
-	AdditionalProperties *types.JSONString `json:"additional_properties,omitempty"`
+	TransactionId        *string                 `json:"transaction_id,omitempty"`
+	TransactionType      *string                 `json:"transaction_type,omitempty"`
+	TransactionDetail    *map[string]interface{} `json:"transaction_detail,omitempty" parquet:"name=transaction_detail, type=JSON"`
+	AdditionalProperties *map[string]interface{} `json:"additional_properties,omitempty" parquet:"name=additional_properties, type=JSON"`
 }

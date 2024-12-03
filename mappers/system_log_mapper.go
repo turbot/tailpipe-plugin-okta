@@ -9,7 +9,6 @@ import (
 
 	"github.com/turbot/tailpipe-plugin-okta/rows"
 	"github.com/turbot/tailpipe-plugin-sdk/table"
-	"github.com/turbot/tailpipe-plugin-sdk/types"
 )
 
 type SystemLogMapper struct {
@@ -44,8 +43,8 @@ func (s SystemLogMapper) Map(ctx context.Context, a any) (*rows.SystemLog, error
 	systemLog.ActorAlternateId = actor.AlternateId
 	systemLog.ActorDisplayName = actor.DisplayName
 	systemLog.ActorType = actor.Type
-	systemLog.ActorAdditionalProperties = marshalAnyFormatToJSONString(actor.AdditionalProperties)
-	systemLog.ActorDetailEntry = marshalAnyFormatToJSONString(actor.DetailEntry)
+	systemLog.ActorAdditionalProperties = &actor.AdditionalProperties
+	systemLog.ActorDetailEntry = &actor.DetailEntry
 
 	// AuthenticationContext info
 	authContext := rawRow.GetAuthenticationContext()
@@ -55,8 +54,12 @@ func (s SystemLogMapper) Map(ctx context.Context, a any) (*rows.SystemLog, error
 	systemLog.CredentialType = authContext.CredentialType
 	systemLog.ExternalSessionId = authContext.ExternalSessionId
 	systemLog.Interface = authContext.Interface
-	systemLog.Issuer = marshalAnyFormatToJSONString(authContext.Issuer)
-	systemLog.ActorAdditionalProperties = marshalAnyFormatToJSONString(authContext.AdditionalProperties)
+	issuer, err := StructToMap(authContext.Issuer)
+	if err != nil {
+		return nil, err
+	}
+	systemLog.Issuer = &issuer
+	systemLog.ActorAdditionalProperties = &authContext.AdditionalProperties
 
 	// Client Info
 	client := rawRow.GetClient()
@@ -64,24 +67,37 @@ func (s SystemLogMapper) Map(ctx context.Context, a any) (*rows.SystemLog, error
 	systemLog.ClientId = client.Id
 	systemLog.ClientIpAddress = client.IpAddress
 	systemLog.ClientZone = client.Zone
-	systemLog.ClientGeographicalContext = marshalAnyFormatToJSONString(client.GeographicalContext)
-	systemLog.ClientUserAgent = marshalAnyFormatToJSONString(client.UserAgent)
-	systemLog.ClientAdditionalProperties = marshalAnyFormatToJSONString(client.AdditionalProperties)
+	clientGeographicalContext, err := StructToMap(client.GeographicalContext)
+	if err != nil {
+		return nil, err
+	}
+	systemLog.ClientGeographicalContext = &clientGeographicalContext
+	clientUserAgent, err := StructToMap(client.UserAgent)
+	if err != nil {
+		return nil, err
+	}
+	systemLog.ClientUserAgent = &clientUserAgent
+	systemLog.ClientAdditionalProperties = &client.AdditionalProperties
 
 	// LogDebugContext info
 	debugContext := rawRow.GetDebugContext()
-	systemLog.DebugData = marshalAnyFormatToJSONString(debugContext.DebugData)
-	systemLog.DebugAdditionalProperties = marshalAnyFormatToJSONString(debugContext.AdditionalProperties)
+	systemLog.DebugData = &debugContext.DebugData
+	systemLog.DebugAdditionalProperties = &debugContext.AdditionalProperties
 
 	// Outcome Info
 	outcome := rawRow.GetOutcome()
 	systemLog.OutcomeReason = outcome.Reason
 	systemLog.OutcomeResult = outcome.Result
-	systemLog.OutcomeAdditionalProperties = marshalAnyFormatToJSONString(outcome.AdditionalProperties)
+	systemLog.OutcomeAdditionalProperties = &outcome.AdditionalProperties
 
 	// Request info
 	request := rawRow.GetRequest()
-	systemLog.IpChain = marshalAnyFormatToJSONString(request.IpChain)
+
+	ipChains, err := StructArrayToMapPointerSlice(request.IpChain)
+	if err != nil {
+		return nil, err
+	}
+	systemLog.IpChain = ipChains
 
 	// SecurityContext info
 	securityContext := rawRow.GetSecurityContext()
@@ -91,28 +107,63 @@ func (s SystemLogMapper) Map(ctx context.Context, a any) (*rows.SystemLog, error
 	systemLog.Isp = securityContext.Isp
 	systemLog.IsProxy = securityContext.IsProxy
 
-	systemLog.Target = marshalAnyFormatToJSONString(rawRow.GetTarget())
+	targets, err := StructArrayToMapPointerSlice(rawRow.GetTarget())
+	if err != nil {
+		return nil, err
+	}
+
+	systemLog.Target = targets
 
 	// Transaction info
 	transaction := rawRow.GetTransaction()
 	systemLog.TransactionId = transaction.Id
 	systemLog.TransactionType = transaction.Type
-	systemLog.TransactionDetail = marshalAnyFormatToJSONString(transaction.Detail)
+	systemLog.TransactionDetail = &transaction.Detail
 
-	systemLog.AdditionalProperties = marshalAnyFormatToJSONString(rawRow.AdditionalProperties)
+	systemLog.AdditionalProperties = &rawRow.AdditionalProperties
 
 	return systemLog, nil
 }
 
-func marshalAnyFormatToJSONString(data any) *types.JSONString {
-	if data == nil {
-		return nil
-	}
-	s, err := json.Marshal(data)
+// StructToMap converts a struct to map[string]interface{}
+func StructToMap(input interface{}) (map[string]interface{}, error) {
+	// Marshal the struct into JSON
+	data, err := json.Marshal(input)
 	if err != nil {
-		panic(fmt.Errorf("error marshalling row data: %w", err))
+		return nil, fmt.Errorf("failed to marshal struct: %w", err)
 	}
-	dataJsonString := types.JSONString(s)
 
-	return &dataJsonString
+	// Unmarshal the JSON into a map
+	var result map[string]interface{}
+	err = json.Unmarshal(data, &result)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal JSON into map: %w", err)
+	}
+
+	return result, nil
+}
+
+// StructArrayToMapPointerSlice converts an array of structs to a slice of *map[string]interface{}
+func StructArrayToMapPointerSlice(input interface{}) ([]*map[string]interface{}, error) {
+	// Marshal the array of structs into JSON
+	data, err := json.Marshal(input)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal struct array: %w", err)
+	}
+
+	// Unmarshal the JSON into a slice of maps
+	var result []map[string]interface{}
+	err = json.Unmarshal(data, &result)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal JSON into slice of maps: %w", err)
+	}
+
+	// Convert []map[string]interface{} to []*map[string]interface{}
+	var pointerSlice []*map[string]interface{}
+	for _, item := range result {
+		copy := item // Create a new copy to avoid reference issues
+		pointerSlice = append(pointerSlice, &copy)
+	}
+
+	return pointerSlice, nil
 }
