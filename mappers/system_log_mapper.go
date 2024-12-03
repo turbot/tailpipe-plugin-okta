@@ -38,55 +38,53 @@ func (s SystemLogMapper) Map(ctx context.Context, a any) (*rows.SystemLog, error
 
 	// Actor info
 	actor := rawRow.GetActor()
-	systemLog.ActorId = actor.Id
-	systemLog.ActorAlternateId = actor.AlternateId
-	systemLog.ActorDisplayName = actor.DisplayName
-	systemLog.ActorType = actor.Type
-	systemLog.ActorAdditionalProperties = &actor.AdditionalProperties
-	systemLog.ActorDetailEntry = &actor.DetailEntry
+	systemLog.Actor = &rows.OktaSystemLogActor{
+		AlternateId: actor.AlternateId,
+		DetailEntry: actor.DetailEntry,
+	}
 
 	// AuthenticationContext info
-	authContext := rawRow.GetAuthenticationContext()
-	systemLog.AuthenticationProvider = authContext.AuthenticationProvider
-	systemLog.AuthenticationStep = authContext.AuthenticationStep
-	systemLog.CredentialProvider = authContext.CredentialProvider
-	systemLog.CredentialType = authContext.CredentialType
-	systemLog.ExternalSessionId = authContext.ExternalSessionId
-	systemLog.Interface = authContext.Interface
+	authenticationContext := rawRow.GetAuthenticationContext()
+	systemLog.AuthenticationContext = &rows.OktaSystemLogAuthenticationContext{
+		AuthenticationProvider: authenticationContext.AuthenticationProvider,
+		AuthenticationStep:     authenticationContext.AuthenticationStep,
+		CredentialProvider:     authenticationContext.CredentialProvider,
+		CredentialType:         authenticationContext.CredentialType,
+		ExternalSessionId:      authenticationContext.ExternalSessionId,
+		Interface:              authenticationContext.Interface,
+		AdditionalProperties:   authenticationContext.AdditionalProperties,
+	}
 
-	systemLog.Issuer = &rows.OktaAuthContextIssuer{}
-
-	if authContext.Issuer != nil && authContext.Issuer.Id != nil {
-		systemLog.Issuer = &rows.OktaAuthContextIssuer{
-			Id:                   authContext.Issuer.Id,
-			Type:                 authContext.Issuer.Type,
-			AdditionalProperties: &authContext.Issuer.AdditionalProperties,
+	if authenticationContext.Issuer != nil {
+		systemLog.AuthenticationContext.Issuer = &rows.LogIssuer{
+			Id:                   authenticationContext.Issuer.Id,
+			Type:                 authenticationContext.Issuer.Type,
+			AdditionalProperties: authenticationContext.Issuer.AdditionalProperties,
 		}
 	}
 
-	systemLog.ActorAdditionalProperties = &authContext.AdditionalProperties
-
 	// Client Info
 	client := rawRow.GetClient()
-	systemLog.ClientDevice = client.Device
-	systemLog.ClientId = client.Id
-	systemLog.ClientIpAddress = client.IpAddress
-	systemLog.ClientZone = client.Zone
-
+	systemLog.Client = &rows.OktaSystemLogClient{
+		Device:               client.Device,
+		Id:                   client.Id,
+		IpAddress:            client.IpAddress,
+		Zone:                 client.Zone,
+		AdditionalProperties: client.AdditionalProperties,
+	}
 	if client.GeographicalContext != nil {
-		systemLog.ClientGeographicalContext = rows.OktaLogClient{
-			Device:               systemLog.ClientGeographicalContext.Device,
-			Id:                   systemLog.ClientGeographicalContext.Id,
-			IpAddress:            systemLog.ClientGeographicalContext.IpAddress,
-			Zone:                 systemLog.ClientGeographicalContext.Zone,
-			GeographicalContext:  systemLog.ClientGeographicalContext.GeographicalContext,
-			UserAgent:            systemLog.ClientGeographicalContext.UserAgent,
-			AdditionalProperties: systemLog.ClientGeographicalContext.AdditionalProperties,
+		systemLog.Client.GeographicalContext = &rows.LogGeographicalContext{
+			City:                 client.GeographicalContext.City,
+			Country:              client.GeographicalContext.Country,
+			Geolocation:          (*rows.LogGeolocation)(client.GeographicalContext.Geolocation),
+			PostalCode:           client.GeographicalContext.PostalCode,
+			State:                client.GetGeographicalContext().State,
+			AdditionalProperties: client.GeographicalContext.AdditionalProperties,
 		}
 	}
 
 	if client.UserAgent != nil {
-		systemLog.ClientUserAgent = rows.OktaUserAgent{
+		systemLog.Client.UserAgent = &rows.LogUserAgent{
 			Browser:              client.UserAgent.Browser,
 			Os:                   client.UserAgent.Os,
 			RawUserAgent:         client.UserAgent.RawUserAgent,
@@ -94,78 +92,50 @@ func (s SystemLogMapper) Map(ctx context.Context, a any) (*rows.SystemLog, error
 		}
 	}
 
-	systemLog.ClientAdditionalProperties = &client.AdditionalProperties
-
 	// LogDebugContext info
 	debugContext := rawRow.GetDebugContext()
-	systemLog.DebugData = &debugContext.DebugData
-	systemLog.DebugAdditionalProperties = &debugContext.AdditionalProperties
+	systemLog.DebugContext = &rows.OktaSystemLogDebugContext{
+		DebugData:            debugContext.DebugData,
+		AdditionalProperties: debugContext.AdditionalProperties,
+	}
 
 	// Outcome Info
 	outcome := rawRow.GetOutcome()
-	systemLog.OutcomeReason = outcome.Reason
-	systemLog.OutcomeResult = outcome.Result
-	systemLog.OutcomeAdditionalProperties = &outcome.AdditionalProperties
-
-	// Request info
-	request := rawRow.GetRequest()
-
-	var ipChains []rows.LogIpAddress
-	if request.IpChain != nil {
-		for _, chain := range request.IpChain {
-			ipChain := rows.LogIpAddress{}
-			ipChain.Ip = chain.Ip
-			ipChain.Source = chain.Source
-			ipChain.GeographicalContext = &rows.OktaLogGeographicalContext{
-				City:                 chain.GeographicalContext.City,
-				Country:              chain.GeographicalContext.Country,
-				Geolocation:          (*rows.LogGeolocation)(chain.GeographicalContext.Geolocation),
-				PostalCode:           chain.GeographicalContext.PostalCode,
-				AdditionalProperties: chain.GeographicalContext.AdditionalProperties,
-			}
-			ipChain.Version = chain.Version
-			ipChains = append(ipChains, ipChain)
-		}
+	systemLog.Outcome = &rows.OktaSystemLogOutcome{
+		Reason:               outcome.Reason,
+		Result:               outcome.Result,
+		AdditionalProperties: outcome.AdditionalProperties,
 	}
 
-	systemLog.IpChain = rows.OktaIpChain{
-		IpChain: ipChains,
+	// Request info
+	req := rawRow.GetRequest()
+	systemLog.Request = &rows.OktaSystemLogRequest{
+		IpChain:              req.IpChain,
+		AdditionalProperties: req.AdditionalProperties,
 	}
 
 	// SecurityContext info
 	securityContext := rawRow.GetSecurityContext()
-	systemLog.AsNumber = securityContext.AsNumber
-	systemLog.AsOrg = securityContext.AsOrg
-	systemLog.Domain = securityContext.Domain
-	systemLog.Isp = securityContext.Isp
-	systemLog.IsProxy = securityContext.IsProxy
+	systemLog.SecurityContext = &rows.OktaSystemLogSecurityContext{
+		AsNumber:             securityContext.AsNumber,
+		AsOrg:                securityContext.AsOrg,
+		Domain:               securityContext.Domain,
+		Isp:                  securityContext.Isp,
+		IsProxy:              securityContext.IsProxy,
+		AdditionalProperties: securityContext.AdditionalProperties,
+	}
 
 	// Target info
-	var targets []rows.OktaLogTarget
-	for _, target := range rawRow.GetTarget() {
-		logTarget := rows.OktaLogTarget{}
-		logTarget.AlternateId = target.AlternateId
-		logTarget.DisplayName = target.DisplayName
-		logTarget.Id = target.Id
-		logTarget.Type = target.Type
-		logTarget.AdditionalProperties = target.AdditionalProperties
-		logTarget.DetailEntry = target.DetailEntry
-		if target.ChangeDetails != nil {
-			logTarget.ChangeDetails = &rows.LogTargetChangeDetails{
-				From:                 target.ChangeDetails.From,
-				To:                   target.ChangeDetails.To,
-				AdditionalProperties: target.ChangeDetails.AdditionalProperties,
-			}
-		}
-		targets = append(targets, logTarget)
-	}
-	systemLog.Target = targets
+	systemLog.Target = rawRow.GetTarget()
 
 	// Transaction info
 	transaction := rawRow.GetTransaction()
-	systemLog.TransactionId = transaction.Id
-	systemLog.TransactionType = transaction.Type
-	systemLog.TransactionDetail = &transaction.Detail
+	systemLog.Transaction = &rows.OktaSystemLogTransaction{
+		Detail:               transaction.Detail,
+		Id:                   transaction.Id,
+		Type:                 transaction.Type,
+		AdditionalProperties: transaction.AdditionalProperties,
+	}
 
 	systemLog.AdditionalProperties = &rawRow.AdditionalProperties
 

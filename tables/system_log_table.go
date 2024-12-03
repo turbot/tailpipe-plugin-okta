@@ -64,34 +64,36 @@ func (c *SystemLogTable) EnrichRow(row *rows.SystemLog, sourceEnrichmentFields *
 	row.TpDate = row.Published.Truncate(24 * time.Hour)
 
 	// IP enrichment
-	if row.ClientIpAddress != nil {
-		row.TpSourceIP = row.ClientIpAddress
-		row.TpIps = append(row.TpIps, *row.ClientIpAddress)
+	if row.Client != nil {
+		ipAddr := row.Client.IpAddress
+		row.TpSourceIP = ipAddr
+		row.TpIps = append(row.TpIps, *ipAddr)
 	}
-	// ipChain := UnmarshalJSONStringToObject(row.IpChain)
-	if len(row.IpChain.IpChain) > 0 {
-		row.TpDestinationIP = row.IpChain.IpChain[len(row.IpChain.IpChain)-1].Ip
+	if len(row.Request.IpChain) > 0 {
+		row.TpDestinationIP = row.Request.IpChain[len(row.Request.IpChain)-1].Ip
 	}
-	for _, ip := range row.IpChain.IpChain {
+	for _, ip := range row.Request.IpChain {
 		if !slices.Contains(row.TpIps, *ip.Ip) {
 			row.TpIps = append(row.TpIps, *ip.Ip)
 		}
 	}
 
 	// User enrichment
-	if row.ActorId != nil {
-		row.TpUsernames = append(row.TpUsernames, *row.ActorId)
-	}
-	if row.ActorDisplayName != nil {
-		row.TpUsernames = append(row.TpUsernames, *row.ActorDisplayName)
-	}
-	if row.ActorAlternateId != nil {
-		row.TpUsernames = append(row.TpUsernames, *row.ActorAlternateId)
+	if row.Actor != nil {
+		if row.Actor.DisplayName != nil {
+			row.TpUsernames = append(row.TpUsernames, *row.Actor.DisplayName)
+		}
+		if row.Actor.Id != nil {
+			row.TpUsernames = append(row.TpUsernames, *row.Actor.Id)
+		}
+		if row.Actor.AlternateId != nil {
+			row.TpUsernames = append(row.TpUsernames, *row.Actor.AlternateId)
+		}
 	}
 
 	// Domain enrichment
-	if row.Domain != nil {
-		row.TpDomains = append(row.TpDomains, *row.Domain)
+	if row.SecurityContext.Domain != nil {
+		row.TpDomains = append(row.TpDomains, *row.SecurityContext.Domain)
 	}
 
 	return row, nil
