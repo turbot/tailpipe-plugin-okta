@@ -1,14 +1,11 @@
 package tables
 
 import (
-	"encoding/json"
 	"fmt"
-	"log"
 	"slices"
 	"strings"
 	"time"
 
-	"github.com/okta/okta-sdk-golang/v5/okta"
 	"github.com/rs/xid"
 
 	"github.com/turbot/tailpipe-plugin-okta/mappers"
@@ -71,11 +68,11 @@ func (c *SystemLogTable) EnrichRow(row *rows.SystemLog, sourceEnrichmentFields *
 		row.TpSourceIP = row.ClientIpAddress
 		row.TpIps = append(row.TpIps, *row.ClientIpAddress)
 	}
-	ipChain := UnmarshalJSONStringToObject(row.IpChain)
-	if len(ipChain) > 0 {
-		row.TpDestinationIP = ipChain[len(ipChain)-1].Ip
+	// ipChain := UnmarshalJSONStringToObject(row.IpChain)
+	if len(row.IpChain.IpChain) > 0 {
+		row.TpDestinationIP = row.IpChain.IpChain[len(row.IpChain.IpChain)-1].Ip
 	}
-	for _, ip := range ipChain {
+	for _, ip := range row.IpChain.IpChain {
 		if !slices.Contains(row.TpIps, *ip.Ip) {
 			row.TpIps = append(row.TpIps, *ip.Ip)
 		}
@@ -98,46 +95,4 @@ func (c *SystemLogTable) EnrichRow(row *rows.SystemLog, sourceEnrichmentFields *
 	}
 
 	return row, nil
-}
-
-func UnmarshalJSONStringToObject(data []*map[string]interface{}) []okta.LogIpAddress {
-	if data == nil || len(data) == 0 {
-		return []okta.LogIpAddress{}
-	}
-
-	// Slice to hold the decoded JSON data
-	var ipData []okta.LogIpAddress
-
-	// Iterate over each map pointer in the input slice
-	for _, item := range data {
-		if item == nil {
-			continue
-		}
-
-		// Marshal the map[string]interface{} back to JSON
-		jsonData, err := json.Marshal(*item)
-		if err != nil {
-			log.Printf("Error marshalling map to JSON: %v", err)
-			continue
-		}
-
-		// Unmarshal the JSON into the struct
-		var tempIpData []okta.LogIpAddress
-		if err := json.Unmarshal(jsonData, &tempIpData); err != nil {
-			log.Printf("Error unmarshalling JSON to struct: %v", err)
-			continue
-		}
-
-		// Append the unmarshalled data to the result slice
-		ipData = append(ipData, tempIpData...)
-	}
-
-	// Debugging: Print the "ip" attribute of the first element in the array
-	if len(ipData) > 0 {
-		fmt.Println("IP Address:", ipData[0].Ip)
-	} else {
-		fmt.Println("No IP data found.")
-	}
-
-	return ipData
 }

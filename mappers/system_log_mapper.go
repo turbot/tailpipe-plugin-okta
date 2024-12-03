@@ -2,7 +2,6 @@ package mappers
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/okta/okta-sdk-golang/v5/okta"
@@ -55,11 +54,16 @@ func (s SystemLogMapper) Map(ctx context.Context, a any) (*rows.SystemLog, error
 	systemLog.ExternalSessionId = authContext.ExternalSessionId
 	systemLog.Interface = authContext.Interface
 
-	systemLog.Issuer = &rows.OktaAuthContextIssuer{
-		Id:                   authContext.Issuer.Id,
-		Type:                 authContext.Issuer.Type,
-		AdditionalProperties: &authContext.Issuer.AdditionalProperties,
+	systemLog.Issuer = &rows.OktaAuthContextIssuer{}
+
+	if authContext.Issuer != nil && authContext.Issuer.Id != nil {
+		systemLog.Issuer = &rows.OktaAuthContextIssuer{
+			Id:                   authContext.Issuer.Id,
+			Type:                 authContext.Issuer.Type,
+			AdditionalProperties: &authContext.Issuer.AdditionalProperties,
+		}
 	}
+
 	systemLog.ActorAdditionalProperties = &authContext.AdditionalProperties
 
 	// Client Info
@@ -68,16 +72,28 @@ func (s SystemLogMapper) Map(ctx context.Context, a any) (*rows.SystemLog, error
 	systemLog.ClientId = client.Id
 	systemLog.ClientIpAddress = client.IpAddress
 	systemLog.ClientZone = client.Zone
-	clientGeographicalContext, err := StructToMap(client.GeographicalContext)
-	if err != nil {
-		return nil, err
+
+	if client.GeographicalContext != nil {
+		systemLog.ClientGeographicalContext = rows.OktaLogClient{
+			Device:               systemLog.ClientGeographicalContext.Device,
+			Id:                   systemLog.ClientGeographicalContext.Id,
+			IpAddress:            systemLog.ClientGeographicalContext.IpAddress,
+			Zone:                 systemLog.ClientGeographicalContext.Zone,
+			GeographicalContext:  systemLog.ClientGeographicalContext.GeographicalContext,
+			UserAgent:            systemLog.ClientGeographicalContext.UserAgent,
+			AdditionalProperties: systemLog.ClientGeographicalContext.AdditionalProperties,
+		}
 	}
-	systemLog.ClientGeographicalContext = &clientGeographicalContext
-	clientUserAgent, err := StructToMap(client.UserAgent)
-	if err != nil {
-		return nil, err
+
+	if client.UserAgent != nil {
+		systemLog.ClientUserAgent = rows.OktaUserAgent{
+			Browser:              client.UserAgent.Browser,
+			Os:                   client.UserAgent.Os,
+			RawUserAgent:         client.UserAgent.RawUserAgent,
+			AdditionalProperties: client.UserAgent.AdditionalProperties,
+		}
 	}
-	systemLog.ClientUserAgent = &clientUserAgent
+
 	systemLog.ClientAdditionalProperties = &client.AdditionalProperties
 
 	// LogDebugContext info
@@ -94,11 +110,32 @@ func (s SystemLogMapper) Map(ctx context.Context, a any) (*rows.SystemLog, error
 	// Request info
 	request := rawRow.GetRequest()
 
-	ipChains, err := StructArrayToMapPointerSlice(request.IpChain)
-	if err != nil {
-		return nil, err
+	// ipChains, err := StructArrayToMapPointerSlice(request.IpChain)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	var ipChains []rows.LogIpAddress
+	if request.IpChain != nil {
+		for _, chain := range request.IpChain {
+			ipChain := rows.LogIpAddress{}
+			ipChain.Ip = chain.Ip
+			ipChain.Source = chain.Source
+			ipChain.GeographicalContext = &rows.OktaLogGeographicalContext{
+				City:                 chain.GeographicalContext.City,
+				Country:              chain.GeographicalContext.Country,
+				Geolocation:          (*rows.LogGeolocation)(chain.GeographicalContext.Geolocation),
+				PostalCode:           chain.GeographicalContext.PostalCode,
+				AdditionalProperties: chain.GeographicalContext.AdditionalProperties,
+			}
+			ipChain.Version = chain.Version
+			ipChains = append(ipChains, ipChain)
+		}
 	}
-	systemLog.IpChain = ipChains
+
+	systemLog.IpChain = rows.OktaIpChain{
+		IpChain: ipChains,
+	}
 
 	// SecurityContext info
 	securityContext := rawRow.GetSecurityContext()
@@ -108,11 +145,25 @@ func (s SystemLogMapper) Map(ctx context.Context, a any) (*rows.SystemLog, error
 	systemLog.Isp = securityContext.Isp
 	systemLog.IsProxy = securityContext.IsProxy
 
-	targets, err := StructArrayToMapPointerSlice(rawRow.GetTarget())
-	if err != nil {
-		return nil, err
+	// Target info
+	var targets []rows.OktaLogTarget
+	for _, target := range rawRow.GetTarget() {
+		logTarget := rows.OktaLogTarget{}
+		logTarget.AlternateId = target.AlternateId
+		logTarget.DisplayName = target.DisplayName
+		logTarget.Id = target.Id
+		logTarget.Type = target.Type
+		logTarget.AdditionalProperties = target.AdditionalProperties
+		logTarget.DetailEntry = target.DetailEntry
+		if target.ChangeDetails != nil {
+			logTarget.ChangeDetails = &rows.LogTargetChangeDetails{
+				From:                 target.ChangeDetails.From,
+				To:                   target.ChangeDetails.To,
+				AdditionalProperties: target.ChangeDetails.AdditionalProperties,
+			}
+		}
+		targets = append(targets, logTarget)
 	}
-
 	systemLog.Target = targets
 
 	// Transaction info
@@ -124,47 +175,4 @@ func (s SystemLogMapper) Map(ctx context.Context, a any) (*rows.SystemLog, error
 	systemLog.AdditionalProperties = &rawRow.AdditionalProperties
 
 	return systemLog, nil
-}
-
-// StructToMap converts a struct to map[string]interface{}
-func StructToMap(input interface{}) (map[string]interface{}, error) {
-	// Marshal the struct into JSON
-	data, err := json.Marshal(input)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal struct: %w", err)
-	}
-
-	// Unmarshal the JSON into a map
-	var result map[string]interface{}
-	err = json.Unmarshal(data, &result)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal JSON into map: %w", err)
-	}
-
-	return result, nil
-}
-
-// StructArrayToMapPointerSlice converts an array of structs to a slice of *map[string]interface{}
-func StructArrayToMapPointerSlice(input interface{}) ([]*map[string]interface{}, error) {
-	// Marshal the array of structs into JSON
-	data, err := json.Marshal(input)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal struct array: %w", err)
-	}
-
-	// Unmarshal the JSON into a slice of maps
-	var result []map[string]interface{}
-	err = json.Unmarshal(data, &result)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal JSON into slice of maps: %w", err)
-	}
-
-	// Convert []map[string]interface{} to []*map[string]interface{}
-	var pointerSlice []*map[string]interface{}
-	for _, item := range result {
-		copy := item // Create a new copy to avoid reference issues
-		pointerSlice = append(pointerSlice, &copy)
-	}
-
-	return pointerSlice, nil
 }
