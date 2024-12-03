@@ -54,11 +54,12 @@ func (s SystemLogMapper) Map(ctx context.Context, a any) (*rows.SystemLog, error
 	systemLog.CredentialType = authContext.CredentialType
 	systemLog.ExternalSessionId = authContext.ExternalSessionId
 	systemLog.Interface = authContext.Interface
-	issuer, err := StructToMap(authContext.Issuer)
-	if err != nil {
-		return nil, err
+
+	systemLog.Issuer = &rows.OktaAuthContextIssuer{
+		Id:                   authContext.Issuer.Id,
+		Type:                 authContext.Issuer.Type,
+		AdditionalProperties: &authContext.Issuer.AdditionalProperties,
 	}
-	systemLog.Issuer = &issuer
 	systemLog.ActorAdditionalProperties = &authContext.AdditionalProperties
 
 	// Client Info

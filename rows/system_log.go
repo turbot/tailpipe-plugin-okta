@@ -36,7 +36,7 @@ type SystemLog struct {
 	CredentialType                     *string                 `json:"credential_type,omitempty"`
 	ExternalSessionId                  *string                 `json:"external_session_id,omitempty"`
 	Interface                          *string                 `json:"interface,omitempty"`
-	Issuer                             *map[string]interface{} `json:"issuer,omitempty" parquet:"name=issuer, type=JSON"`
+	Issuer                             *OktaAuthContextIssuer  `json:"issuer,omitempty"`
 	AuthenticationAdditionalProperties *map[string]interface{} `json:"authentication_additional_properties,omitempty" parquet:"name=authentication_additional_properties, type=JSON"`
 
 	// Client fields
@@ -73,4 +73,10 @@ type SystemLog struct {
 	TransactionType      *string                 `json:"transaction_type,omitempty"`
 	TransactionDetail    *map[string]interface{} `json:"transaction_detail,omitempty" parquet:"name=transaction_detail, type=JSON"`
 	AdditionalProperties *map[string]interface{} `json:"additional_properties,omitempty" parquet:"name=additional_properties, type=JSON"`
+}
+
+type OktaAuthContextIssuer struct {
+	Id                   *string                 `json:"id,omitempty"`
+	Type                 *string                 `json:"type,omitempty"`
+	AdditionalProperties *map[string]interface{} `json:"additional_properties,omitempty" parquet:"type=JSON"`
 }
