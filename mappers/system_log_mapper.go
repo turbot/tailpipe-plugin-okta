@@ -110,11 +110,6 @@ func (s SystemLogMapper) Map(ctx context.Context, a any) (*rows.SystemLog, error
 	// Request info
 	request := rawRow.GetRequest()
 
-	// ipChains, err := StructArrayToMapPointerSlice(request.IpChain)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
 	var ipChains []rows.LogIpAddress
 	if request.IpChain != nil {
 		for _, chain := range request.IpChain {

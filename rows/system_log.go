@@ -128,7 +128,7 @@ type LogIpAddress struct {
 
 type OktaLogTarget struct {
 	AlternateId   *string                 `json:"alternateId,omitempty"`
-	ChangeDetails *LogTargetChangeDetails `json:"changeDetails,omitempty"`
+	ChangeDetails *LogTargetChangeDetails `json:"changeDetails,omitempty" parquet:"type=JSON"`
 	// Further details on the target
 	DetailEntry map[string]interface{} `json:"detailEntry,omitempty"`
 	// The display name of the target
@@ -142,8 +142,8 @@ type OktaLogTarget struct {
 
 type LogTargetChangeDetails struct {
 	// The original properties of the target
-	From map[string]interface{} `json:"from,omitempty"`
+	From map[string]interface{} `json:"from,omitempty" parquet:"type=JSON"`
 	// The updated properties of the target
-	To                   map[string]interface{} `json:"to,omitempty"`
+	To                   map[string]interface{} `json:"to,omitempty" parquet:"type=JSON"`
 	AdditionalProperties map[string]interface{} `json:"additional_properties,omitempty" parquet:"type=JSON"`
 }
