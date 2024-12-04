@@ -76,10 +76,16 @@ func (s SystemLogMapper) Map(ctx context.Context, a any) (*rows.SystemLog, error
 		systemLog.Client.GeographicalContext = &rows.LogGeographicalContext{
 			City:                 client.GeographicalContext.City,
 			Country:              client.GeographicalContext.Country,
-			Geolocation:          (*rows.LogGeolocation)(client.GeographicalContext.Geolocation),
 			PostalCode:           client.GeographicalContext.PostalCode,
-			State:                client.GetGeographicalContext().State,
+			State:                client.GeographicalContext.State,
 			AdditionalProperties: client.GeographicalContext.AdditionalProperties,
+		}
+		if client.GeographicalContext.Geolocation != nil {
+			systemLog.Client.GeographicalContext.Geolocation = &rows.LogGeolocation{
+				Lat:                  client.GeographicalContext.Geolocation.Lat,
+				Lon:                  client.GeographicalContext.Geolocation.Lon,
+				AdditionalProperties: client.GeographicalContext.Geolocation.AdditionalProperties,
+			}
 		}
 	}
 
