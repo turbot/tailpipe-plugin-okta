@@ -12,44 +12,24 @@ type SystemLog struct {
 	// embed required enrichment fields
 	enrichment.CommonFields
 
-	// Top level property
-	DisplayMessage  *string    `json:"display_message,omitempty"`
-	EventType       *string    `json:"event_type,omitempty"`
-	LegacyEventType *string    `json:"legacy_event_type,omitempty"`
-	Published       *time.Time `json:"published,omitempty"`
-	Severity        *string    `json:"severity,omitempty"`
-	Uuid            *string    `json:"uuid,omitempty"`
-	Version         *string    `json:"version,omitempty"`
-	SubDomain       *string    `json:"sub_domain,omitempty"`
-
-	// Actor fields
-	Actor *OktaSystemLogActor `json:"actor,omitempty"`
-
-	// AuthenticationContext fields
+	Uuid                  *string                             `json:"uuid,omitempty"`
+	DisplayMessage        *string                             `json:"display_message,omitempty"`
+	EventType             *string                             `json:"event_type,omitempty"`
+	LegacyEventType       *string                             `json:"legacy_event_type,omitempty"`
+	Published             *time.Time                          `json:"published,omitempty"`
+	Severity              *string                             `json:"severity,omitempty"`
+	Version               *string                             `json:"version,omitempty"`
+	SubDomain             *string                             `json:"sub_domain,omitempty"`
+	Actor                 *OktaSystemLogActor                 `json:"actor,omitempty"`
 	AuthenticationContext *OktaSystemLogAuthenticationContext `json:"authentication_context,omitempty"`
-
-	// Client fields
-	Client *OktaSystemLogClient `json:"client,omitempty"`
-
-	// LogDebugContext fields
-	DebugContext *OktaSystemLogDebugContext `json:"debug_context,omitempty"`
-
-	// Outcome fields
-	Outcome *OktaSystemLogOutcome `json:"outcome,omitempty"`
-
-	// Request fields
-	Request *OktaSystemLogRequest `json:"request,omitempty"`
-
-	// Target fields
-	Target []okta.LogTarget `json:"target,omitempty" parquet:"type=JSON"`
-
-	// SecurityContext field
-	SecurityContext *OktaSystemLogSecurityContext `json:"security_context,omitempty"`
-
-	// Transaction fields
-	Transaction *OktaSystemLogTransaction `json:"transaction,omitempty"`
-
-	AdditionalProperties *map[string]interface{} `json:"additional_properties,omitempty" parquet:"type=JSON"`
+	Client                *OktaSystemLogClient                `json:"client,omitempty"`
+	DebugContext          *OktaSystemLogDebugContext          `json:"debug_context,omitempty"`
+	Outcome               *OktaSystemLogOutcome               `json:"outcome,omitempty"`
+	Request               *OktaSystemLogRequest               `json:"request,omitempty"`
+	Target                []okta.LogTarget                    `json:"target,omitempty" parquet:"type=JSON"`
+	SecurityContext       *OktaSystemLogSecurityContext       `json:"security_context,omitempty"`
+	Transaction           *OktaSystemLogTransaction           `json:"transaction,omitempty"`
+	AdditionalProperties  *map[string]interface{}             `json:"additional_properties,omitempty" parquet:"type=JSON"`
 }
 
 // Actor
