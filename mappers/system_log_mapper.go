@@ -2,14 +2,12 @@ package mappers
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/okta/okta-sdk-golang/v5/okta"
 
 	"github.com/turbot/tailpipe-plugin-okta/rows"
 	"github.com/turbot/tailpipe-plugin-sdk/table"
-	"github.com/turbot/tailpipe-plugin-sdk/types"
 )
 
 type SystemLogMapper struct {
@@ -40,79 +38,112 @@ func (s SystemLogMapper) Map(ctx context.Context, a any) (*rows.SystemLog, error
 
 	// Actor info
 	actor := rawRow.GetActor()
-	systemLog.ActorId = actor.Id
-	systemLog.ActorAlternateId = actor.AlternateId
-	systemLog.ActorDisplayName = actor.DisplayName
-	systemLog.ActorType = actor.Type
-	systemLog.ActorAdditionalProperties = marshalAnyFormatToJSONString(actor.AdditionalProperties)
-	systemLog.ActorDetailEntry = marshalAnyFormatToJSONString(actor.DetailEntry)
+	systemLog.Actor = &rows.OktaSystemLogActor{
+		AlternateId: actor.AlternateId,
+		DetailEntry: actor.DetailEntry,
+	}
 
 	// AuthenticationContext info
-	authContext := rawRow.GetAuthenticationContext()
-	systemLog.AuthenticationProvider = authContext.AuthenticationProvider
-	systemLog.AuthenticationStep = authContext.AuthenticationStep
-	systemLog.CredentialProvider = authContext.CredentialProvider
-	systemLog.CredentialType = authContext.CredentialType
-	systemLog.ExternalSessionId = authContext.ExternalSessionId
-	systemLog.Interface = authContext.Interface
-	systemLog.Issuer = marshalAnyFormatToJSONString(authContext.Issuer)
-	systemLog.ActorAdditionalProperties = marshalAnyFormatToJSONString(authContext.AdditionalProperties)
+	authenticationContext := rawRow.GetAuthenticationContext()
+	systemLog.AuthenticationContext = &rows.OktaSystemLogAuthenticationContext{
+		AuthenticationProvider: authenticationContext.AuthenticationProvider,
+		AuthenticationStep:     authenticationContext.AuthenticationStep,
+		CredentialProvider:     authenticationContext.CredentialProvider,
+		CredentialType:         authenticationContext.CredentialType,
+		ExternalSessionId:      authenticationContext.ExternalSessionId,
+		Interface:              authenticationContext.Interface,
+		AdditionalProperties:   authenticationContext.AdditionalProperties,
+	}
+
+	if authenticationContext.Issuer != nil {
+		systemLog.AuthenticationContext.Issuer = &rows.LogIssuer{
+			Id:                   authenticationContext.Issuer.Id,
+			Type:                 authenticationContext.Issuer.Type,
+			AdditionalProperties: authenticationContext.Issuer.AdditionalProperties,
+		}
+	}
 
 	// Client Info
 	client := rawRow.GetClient()
-	systemLog.ClientDevice = client.Device
-	systemLog.ClientId = client.Id
-	systemLog.ClientIpAddress = client.IpAddress
-	systemLog.ClientZone = client.Zone
-	systemLog.ClientGeographicalContext = marshalAnyFormatToJSONString(client.GeographicalContext)
-	systemLog.ClientUserAgent = marshalAnyFormatToJSONString(client.UserAgent)
-	systemLog.ClientAdditionalProperties = marshalAnyFormatToJSONString(client.AdditionalProperties)
+	systemLog.Client = &rows.OktaSystemLogClient{
+		Device:               client.Device,
+		Id:                   client.Id,
+		IpAddress:            client.IpAddress,
+		Zone:                 client.Zone,
+		AdditionalProperties: client.AdditionalProperties,
+	}
+	if client.GeographicalContext != nil {
+		systemLog.Client.GeographicalContext = &rows.LogGeographicalContext{
+			City:                 client.GeographicalContext.City,
+			Country:              client.GeographicalContext.Country,
+			PostalCode:           client.GeographicalContext.PostalCode,
+			State:                client.GeographicalContext.State,
+			AdditionalProperties: client.GeographicalContext.AdditionalProperties,
+		}
+		if client.GeographicalContext.Geolocation != nil {
+			systemLog.Client.GeographicalContext.Geolocation = &rows.LogGeolocation{
+				Lat:                  client.GeographicalContext.Geolocation.Lat,
+				Lon:                  client.GeographicalContext.Geolocation.Lon,
+				AdditionalProperties: client.GeographicalContext.Geolocation.AdditionalProperties,
+			}
+		}
+	}
+
+	if client.UserAgent != nil {
+		systemLog.Client.UserAgent = &rows.LogUserAgent{
+			Browser:              client.UserAgent.Browser,
+			Os:                   client.UserAgent.Os,
+			RawUserAgent:         client.UserAgent.RawUserAgent,
+			AdditionalProperties: client.UserAgent.AdditionalProperties,
+		}
+	}
 
 	// LogDebugContext info
 	debugContext := rawRow.GetDebugContext()
-	systemLog.DebugData = marshalAnyFormatToJSONString(debugContext.DebugData)
-	systemLog.DebugAdditionalProperties = marshalAnyFormatToJSONString(debugContext.AdditionalProperties)
+	systemLog.DebugContext = &rows.OktaSystemLogDebugContext{
+		DebugData:            debugContext.DebugData,
+		AdditionalProperties: debugContext.AdditionalProperties,
+	}
 
 	// Outcome Info
 	outcome := rawRow.GetOutcome()
-	systemLog.OutcomeReason = outcome.Reason
-	systemLog.OutcomeResult = outcome.Result
-	systemLog.OutcomeAdditionalProperties = marshalAnyFormatToJSONString(outcome.AdditionalProperties)
+	systemLog.Outcome = &rows.OktaSystemLogOutcome{
+		Reason:               outcome.Reason,
+		Result:               outcome.Result,
+		AdditionalProperties: outcome.AdditionalProperties,
+	}
 
 	// Request info
-	request := rawRow.GetRequest()
-	systemLog.IpChain = marshalAnyFormatToJSONString(request.IpChain)
+	req := rawRow.GetRequest()
+	systemLog.Request = &rows.OktaSystemLogRequest{
+		IpChain:              req.IpChain,
+		AdditionalProperties: req.AdditionalProperties,
+	}
 
 	// SecurityContext info
 	securityContext := rawRow.GetSecurityContext()
-	systemLog.AsNumber = securityContext.AsNumber
-	systemLog.AsOrg = securityContext.AsOrg
-	systemLog.Domain = securityContext.Domain
-	systemLog.Isp = securityContext.Isp
-	systemLog.IsProxy = securityContext.IsProxy
+	systemLog.SecurityContext = &rows.OktaSystemLogSecurityContext{
+		AsNumber:             securityContext.AsNumber,
+		AsOrg:                securityContext.AsOrg,
+		Domain:               securityContext.Domain,
+		Isp:                  securityContext.Isp,
+		IsProxy:              securityContext.IsProxy,
+		AdditionalProperties: securityContext.AdditionalProperties,
+	}
 
-	systemLog.Target = marshalAnyFormatToJSONString(rawRow.GetTarget())
+	// Target info
+	systemLog.Target = rawRow.GetTarget()
 
 	// Transaction info
 	transaction := rawRow.GetTransaction()
-	systemLog.TransactionId = transaction.Id
-	systemLog.TransactionType = transaction.Type
-	systemLog.TransactionDetail = marshalAnyFormatToJSONString(transaction.Detail)
+	systemLog.Transaction = &rows.OktaSystemLogTransaction{
+		Detail:               transaction.Detail,
+		Id:                   transaction.Id,
+		Type:                 transaction.Type,
+		AdditionalProperties: transaction.AdditionalProperties,
+	}
 
-	systemLog.AdditionalProperties = marshalAnyFormatToJSONString(rawRow.AdditionalProperties)
+	systemLog.AdditionalProperties = &rawRow.AdditionalProperties
 
 	return systemLog, nil
-}
-
-func marshalAnyFormatToJSONString(data any) *types.JSONString {
-	if data == nil {
-		return nil
-	}
-	s, err := json.Marshal(data)
-	if err != nil {
-		panic(fmt.Errorf("error marshalling row data: %w", err))
-	}
-	dataJsonString := types.JSONString(s)
-
-	return &dataJsonString
 }
