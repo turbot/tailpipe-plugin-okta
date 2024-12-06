@@ -81,10 +81,12 @@ func (s *SystemLogAPISource) Collect(ctx context.Context) error {
 	// populate enrichment fields the source is aware of
 	// - in this case the connection
 	tpSource := fmt.Sprint(SystemLogAPISourceIdentifier)
-	sourceEnrichmentFields := &enrichment.CommonFields{
-		TpSourceName:     &tpSource,
-		TpSourceType:     SystemLogAPISourceIdentifier,
-		TpSourceLocation: s.Connection.Domain,
+	sourceEnrichmentFields := &enrichment.SourceEnrichment{
+		CommonFields: enrichment.CommonFields{
+			TpSourceName:     &tpSource,
+			TpSourceType:     SystemLogAPISourceIdentifier,
+			TpSourceLocation: s.Connection.Domain,
+		},
 	}
 
 	// Limiting the results to 500 per page.
@@ -128,7 +130,7 @@ func (s *SystemLogAPISource) Collect(ctx context.Context) error {
 		}
 
 		// populate artifact data
-		row := &types.RowData{Data: item, Metadata: sourceEnrichmentFields}
+		row := &types.RowData{Data: item, SourceEnrichment: sourceEnrichmentFields}
 
 		// update collection state
 		collectionState.Upsert(*item.Published, *item.Uuid, nil)

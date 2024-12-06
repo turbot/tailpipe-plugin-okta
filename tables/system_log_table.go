@@ -1,7 +1,6 @@
 package tables
 
 import (
-	"fmt"
 	"slices"
 	"strings"
 	"time"
@@ -33,28 +32,22 @@ func (c *SystemLogTable) Identifier() string {
 	return SystemLogTableIdentifier
 }
 
-func (c *SystemLogTable) SupportedSources(_ *SystemLogTableConfig) []*table.SourceMetadata[*rows.SystemLog] {
+func (c *SystemLogTable) GetSourceMetadata(_ *SystemLogTableConfig) []*table.SourceMetadata[*rows.SystemLog] {
 	return []*table.SourceMetadata[*rows.SystemLog]{
 		{
 			SourceName: sources.SystemLogAPISourceIdentifier,
-			MapperFunc: mappers.NewSystemLogMapper,
+			Mapper:     &mappers.SystemLogMapper{},
 		},
 	}
 }
 
-func (c *SystemLogTable) EnrichRow(row *rows.SystemLog, sourceEnrichmentFields *enrichment.CommonFields) (*rows.SystemLog, error) {
-	// we expect sourceEnrichmentFields to be set
-	if sourceEnrichmentFields == nil {
-		return nil, fmt.Errorf("SystemLogTable EnrichRow called with nil sourceEnrichmentFields")
-	}
-	// we expect name to be set by the Source
-	if sourceEnrichmentFields.TpSourceName == nil {
-		return nil, fmt.Errorf("SystemLogTable EnrichRow called with TpSourceName unset in sourceEnrichmentFields")
-	}
+func (c *SystemLogTable) EnrichRow(row *rows.SystemLog, _ *SystemLogTableConfig, sourceEnrichmentFields enrichment.SourceEnrichment) (*rows.SystemLog, error) {
+	row.CommonFields = sourceEnrichmentFields.CommonFields
 
-	row.CommonFields = *sourceEnrichmentFields
-
-	subDomain := strings.Split(strings.Replace(*sourceEnrichmentFields.TpSourceLocation, "https://", "", 2), "/")[0]
+	var subDomain string
+	if row.CommonFields.TpSourceLocation != nil {
+		subDomain = strings.Split(strings.Replace(*row.CommonFields.TpSourceLocation, "https://", "", 2), "/")[0]
+	}
 
 	// id & Hive fields
 	row.TpID = xid.New().String()

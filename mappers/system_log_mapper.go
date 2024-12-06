@@ -7,14 +7,9 @@ import (
 	"github.com/okta/okta-sdk-golang/v5/okta"
 
 	"github.com/turbot/tailpipe-plugin-okta/rows"
-	"github.com/turbot/tailpipe-plugin-sdk/table"
 )
 
 type SystemLogMapper struct {
-}
-
-func NewSystemLogMapper() table.Mapper[*rows.SystemLog] {
-	return &SystemLogMapper{}
 }
 
 func (s SystemLogMapper) Identifier() string {
