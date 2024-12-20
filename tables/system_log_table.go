@@ -6,11 +6,10 @@ import (
 	"time"
 
 	"github.com/rs/xid"
-
 	"github.com/turbot/tailpipe-plugin-okta/mappers"
 	"github.com/turbot/tailpipe-plugin-okta/rows"
 	"github.com/turbot/tailpipe-plugin-okta/sources"
-	"github.com/turbot/tailpipe-plugin-sdk/enrichment"
+	"github.com/turbot/tailpipe-plugin-sdk/schema"
 	"github.com/turbot/tailpipe-plugin-sdk/table"
 )
 
@@ -41,7 +40,7 @@ func (c *SystemLogTable) GetSourceMetadata(_ *SystemLogTableConfig) []*table.Sou
 	}
 }
 
-func (c *SystemLogTable) EnrichRow(row *rows.SystemLog, _ *SystemLogTableConfig, sourceEnrichmentFields enrichment.SourceEnrichment) (*rows.SystemLog, error) {
+func (c *SystemLogTable) EnrichRow(row *rows.SystemLog, _ *SystemLogTableConfig, sourceEnrichmentFields schema.SourceEnrichment) (*rows.SystemLog, error) {
 	row.CommonFields = sourceEnrichmentFields.CommonFields
 
 	var subDomain string
