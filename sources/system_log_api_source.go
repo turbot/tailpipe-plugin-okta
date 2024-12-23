@@ -139,7 +139,6 @@ func (s *SystemLogAPISource) Collect(ctx context.Context) error {
 		}
 
 		if err := s.OnRow(ctx, row, collectionStateJSON); err != nil {
-			// TODO K #errorHandling - this does not bubble up
 			return fmt.Errorf("error processing row: %w", err)
 		}
 	}
