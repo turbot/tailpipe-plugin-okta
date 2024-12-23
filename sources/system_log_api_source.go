@@ -7,7 +7,6 @@ import (
 	"github.com/okta/okta-sdk-golang/v5/okta"
 	"github.com/turbot/tailpipe-plugin-okta/config"
 	"github.com/turbot/tailpipe-plugin-sdk/collection_state"
-	"github.com/turbot/tailpipe-plugin-sdk/config_data"
 	"github.com/turbot/tailpipe-plugin-sdk/row_source"
 	"github.com/turbot/tailpipe-plugin-sdk/schema"
 	"github.com/turbot/tailpipe-plugin-sdk/types"
@@ -25,7 +24,7 @@ type SystemLogAPISource struct {
 	row_source.RowSourceImpl[*SystemLogAPISourceConfig, *config.OktaConnection]
 }
 
-func (s *SystemLogAPISource) Init(ctx context.Context, configData config_data.ConfigData, connectionData config_data.ConfigData, opts ...row_source.RowSourceOption) error {
+func (s *SystemLogAPISource) Init(ctx context.Context, configData types.ConfigData, connectionData types.ConfigData, opts ...row_source.RowSourceOption) error {
 	// set the collection state ctor
 	s.NewCollectionStateFunc = collection_state.NewTimeRangeCollectionState
 
