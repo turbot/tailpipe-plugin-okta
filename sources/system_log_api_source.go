@@ -5,12 +5,11 @@ import (
 	"fmt"
 
 	"github.com/okta/okta-sdk-golang/v5/okta"
-
 	"github.com/turbot/tailpipe-plugin-okta/config"
 	"github.com/turbot/tailpipe-plugin-sdk/collection_state"
 	"github.com/turbot/tailpipe-plugin-sdk/config_data"
-	"github.com/turbot/tailpipe-plugin-sdk/enrichment"
 	"github.com/turbot/tailpipe-plugin-sdk/row_source"
+	"github.com/turbot/tailpipe-plugin-sdk/schema"
 	"github.com/turbot/tailpipe-plugin-sdk/types"
 )
 
@@ -81,8 +80,8 @@ func (s *SystemLogAPISource) Collect(ctx context.Context) error {
 	// populate enrichment fields the source is aware of
 	// - in this case the connection
 	tpSource := fmt.Sprint(SystemLogAPISourceIdentifier)
-	sourceEnrichmentFields := &enrichment.SourceEnrichment{
-		CommonFields: enrichment.CommonFields{
+	sourceEnrichmentFields := &schema.SourceEnrichment{
+		CommonFields: schema.CommonFields{
 			TpSourceName:     &tpSource,
 			TpSourceType:     SystemLogAPISourceIdentifier,
 			TpSourceLocation: s.Connection.Domain,
@@ -140,7 +139,6 @@ func (s *SystemLogAPISource) Collect(ctx context.Context) error {
 		}
 
 		if err := s.OnRow(ctx, row, collectionStateJSON); err != nil {
-			// TODO K #errorHandling - this does not bubble up
 			return fmt.Errorf("error processing row: %w", err)
 		}
 	}

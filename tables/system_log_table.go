@@ -6,11 +6,10 @@ import (
 	"time"
 
 	"github.com/rs/xid"
-
 	"github.com/turbot/tailpipe-plugin-okta/mappers"
 	"github.com/turbot/tailpipe-plugin-okta/rows"
 	"github.com/turbot/tailpipe-plugin-okta/sources"
-	"github.com/turbot/tailpipe-plugin-sdk/enrichment"
+	"github.com/turbot/tailpipe-plugin-sdk/schema"
 	"github.com/turbot/tailpipe-plugin-sdk/table"
 )
 
@@ -22,7 +21,7 @@ func init() {
 	// 1. row struct
 	// 2. table config struct
 	// 3. table implementation
-	table.RegisterTable[*rows.SystemLog, *SystemLogTableConfig, *SystemLogTable]()
+	table.RegisterTable[*rows.SystemLog, *SystemLogTable]()
 }
 
 type SystemLogTable struct {
@@ -32,7 +31,7 @@ func (c *SystemLogTable) Identifier() string {
 	return SystemLogTableIdentifier
 }
 
-func (c *SystemLogTable) GetSourceMetadata(_ *SystemLogTableConfig) []*table.SourceMetadata[*rows.SystemLog] {
+func (c *SystemLogTable) GetSourceMetadata() []*table.SourceMetadata[*rows.SystemLog] {
 	return []*table.SourceMetadata[*rows.SystemLog]{
 		{
 			SourceName: sources.SystemLogAPISourceIdentifier,
@@ -41,7 +40,7 @@ func (c *SystemLogTable) GetSourceMetadata(_ *SystemLogTableConfig) []*table.Sou
 	}
 }
 
-func (c *SystemLogTable) EnrichRow(row *rows.SystemLog, _ *SystemLogTableConfig, sourceEnrichmentFields enrichment.SourceEnrichment) (*rows.SystemLog, error) {
+func (c *SystemLogTable) EnrichRow(row *rows.SystemLog, sourceEnrichmentFields schema.SourceEnrichment) (*rows.SystemLog, error) {
 	row.CommonFields = sourceEnrichmentFields.CommonFields
 
 	var subDomain string

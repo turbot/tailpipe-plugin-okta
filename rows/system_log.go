@@ -4,13 +4,13 @@ import (
 	"time"
 
 	"github.com/okta/okta-sdk-golang/v5/okta"
-	"github.com/turbot/tailpipe-plugin-sdk/enrichment"
+	"github.com/turbot/tailpipe-plugin-sdk/schema"
 )
 
 // SystemLog is the struct containing the enriched data for an AuditRecord
 type SystemLog struct {
 	// embed required enrichment fields
-	enrichment.CommonFields
+	schema.CommonFields
 
 	Uuid                  *string                             `json:"uuid,omitempty"`
 	DisplayMessage        *string                             `json:"display_message,omitempty"`

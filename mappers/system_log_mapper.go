@@ -3,6 +3,7 @@ package mappers
 import (
 	"context"
 	"fmt"
+	"github.com/turbot/tailpipe-plugin-sdk/table"
 
 	"github.com/okta/okta-sdk-golang/v5/okta"
 
@@ -16,7 +17,7 @@ func (s SystemLogMapper) Identifier() string {
 	return "okta_system_log_mapper"
 }
 
-func (s SystemLogMapper) Map(ctx context.Context, a any) (*rows.SystemLog, error) {
+func (s SystemLogMapper) Map(ctx context.Context, a any, _ ...table.MapOption[*rows.SystemLog]) (*rows.SystemLog, error) {
 	systemLog := &rows.SystemLog{}
 	rawRow, ok := a.(okta.LogEvent)
 	if !ok {
