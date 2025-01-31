@@ -3,15 +3,25 @@ package okta
 import (
 	"github.com/turbot/go-kit/helpers"
 	"github.com/turbot/tailpipe-plugin-okta/config"
+	"github.com/turbot/tailpipe-plugin-okta/sources/system_log_api"
+	"github.com/turbot/tailpipe-plugin-okta/tables/system_log"
 	"github.com/turbot/tailpipe-plugin-sdk/plugin"
-
-	// reference the table package to ensure that the tables are registered by the init functions
-	_ "github.com/turbot/tailpipe-plugin-okta/sources"
-	_ "github.com/turbot/tailpipe-plugin-okta/tables"
+	"github.com/turbot/tailpipe-plugin-sdk/row_source"
+	"github.com/turbot/tailpipe-plugin-sdk/table"
 )
 
 type Plugin struct {
 	plugin.PluginImpl
+}
+
+func init() {
+	// Register tables, with type parameters:
+	// 1. row struct
+	// 2. table implementation
+	table.RegisterTable[*system_log.SystemLog, *system_log.SystemLogTable]()
+
+	// register sources
+	row_source.RegisterRowSource[*system_log_api.SystemLogAPISource]()
 }
 
 func NewPlugin() (_ plugin.TailpipePlugin, err error) {

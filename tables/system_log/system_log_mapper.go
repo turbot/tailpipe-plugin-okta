@@ -1,13 +1,12 @@
-package mappers
+package system_log
 
 import (
 	"context"
 	"fmt"
+
 	"github.com/turbot/tailpipe-plugin-sdk/table"
 
 	"github.com/okta/okta-sdk-golang/v5/okta"
-
-	"github.com/turbot/tailpipe-plugin-okta/rows"
 )
 
 type SystemLogMapper struct {
@@ -17,8 +16,8 @@ func (s SystemLogMapper) Identifier() string {
 	return "okta_system_log_mapper"
 }
 
-func (s SystemLogMapper) Map(ctx context.Context, a any, _ ...table.MapOption[*rows.SystemLog]) (*rows.SystemLog, error) {
-	systemLog := &rows.SystemLog{}
+func (s SystemLogMapper) Map(ctx context.Context, a any, _ ...table.MapOption[*SystemLog]) (*SystemLog, error) {
+	systemLog := &SystemLog{}
 	rawRow, ok := a.(okta.LogEvent)
 	if !ok {
 		return nil, fmt.Errorf("expected okta.LogEvent, got %T", a)
@@ -34,14 +33,14 @@ func (s SystemLogMapper) Map(ctx context.Context, a any, _ ...table.MapOption[*r
 
 	// Actor info
 	actor := rawRow.GetActor()
-	systemLog.Actor = &rows.OktaSystemLogActor{
+	systemLog.Actor = &OktaSystemLogActor{
 		AlternateId: actor.AlternateId,
 		DetailEntry: actor.DetailEntry,
 	}
 
 	// AuthenticationContext info
 	authenticationContext := rawRow.GetAuthenticationContext()
-	systemLog.AuthenticationContext = &rows.OktaSystemLogAuthenticationContext{
+	systemLog.AuthenticationContext = &OktaSystemLogAuthenticationContext{
 		AuthenticationProvider: authenticationContext.AuthenticationProvider,
 		AuthenticationStep:     authenticationContext.AuthenticationStep,
 		CredentialProvider:     authenticationContext.CredentialProvider,
@@ -52,7 +51,7 @@ func (s SystemLogMapper) Map(ctx context.Context, a any, _ ...table.MapOption[*r
 	}
 
 	if authenticationContext.Issuer != nil {
-		systemLog.AuthenticationContext.Issuer = &rows.LogIssuer{
+		systemLog.AuthenticationContext.Issuer = &LogIssuer{
 			Id:                   authenticationContext.Issuer.Id,
 			Type:                 authenticationContext.Issuer.Type,
 			AdditionalProperties: authenticationContext.Issuer.AdditionalProperties,
@@ -61,7 +60,7 @@ func (s SystemLogMapper) Map(ctx context.Context, a any, _ ...table.MapOption[*r
 
 	// Client Info
 	client := rawRow.GetClient()
-	systemLog.Client = &rows.OktaSystemLogClient{
+	systemLog.Client = &OktaSystemLogClient{
 		Device:               client.Device,
 		Id:                   client.Id,
 		IpAddress:            client.IpAddress,
@@ -69,7 +68,7 @@ func (s SystemLogMapper) Map(ctx context.Context, a any, _ ...table.MapOption[*r
 		AdditionalProperties: client.AdditionalProperties,
 	}
 	if client.GeographicalContext != nil {
-		systemLog.Client.GeographicalContext = &rows.LogGeographicalContext{
+		systemLog.Client.GeographicalContext = &LogGeographicalContext{
 			City:                 client.GeographicalContext.City,
 			Country:              client.GeographicalContext.Country,
 			PostalCode:           client.GeographicalContext.PostalCode,
@@ -77,7 +76,7 @@ func (s SystemLogMapper) Map(ctx context.Context, a any, _ ...table.MapOption[*r
 			AdditionalProperties: client.GeographicalContext.AdditionalProperties,
 		}
 		if client.GeographicalContext.Geolocation != nil {
-			systemLog.Client.GeographicalContext.Geolocation = &rows.LogGeolocation{
+			systemLog.Client.GeographicalContext.Geolocation = &LogGeolocation{
 				Lat:                  client.GeographicalContext.Geolocation.Lat,
 				Lon:                  client.GeographicalContext.Geolocation.Lon,
 				AdditionalProperties: client.GeographicalContext.Geolocation.AdditionalProperties,
@@ -86,7 +85,7 @@ func (s SystemLogMapper) Map(ctx context.Context, a any, _ ...table.MapOption[*r
 	}
 
 	if client.UserAgent != nil {
-		systemLog.Client.UserAgent = &rows.LogUserAgent{
+		systemLog.Client.UserAgent = &LogUserAgent{
 			Browser:              client.UserAgent.Browser,
 			Os:                   client.UserAgent.Os,
 			RawUserAgent:         client.UserAgent.RawUserAgent,
@@ -96,14 +95,14 @@ func (s SystemLogMapper) Map(ctx context.Context, a any, _ ...table.MapOption[*r
 
 	// LogDebugContext info
 	debugContext := rawRow.GetDebugContext()
-	systemLog.DebugContext = &rows.OktaSystemLogDebugContext{
+	systemLog.DebugContext = &OktaSystemLogDebugContext{
 		DebugData:            debugContext.DebugData,
 		AdditionalProperties: debugContext.AdditionalProperties,
 	}
 
 	// Outcome Info
 	outcome := rawRow.GetOutcome()
-	systemLog.Outcome = &rows.OktaSystemLogOutcome{
+	systemLog.Outcome = &OktaSystemLogOutcome{
 		Reason:               outcome.Reason,
 		Result:               outcome.Result,
 		AdditionalProperties: outcome.AdditionalProperties,
@@ -111,14 +110,14 @@ func (s SystemLogMapper) Map(ctx context.Context, a any, _ ...table.MapOption[*r
 
 	// Request info
 	req := rawRow.GetRequest()
-	systemLog.Request = &rows.OktaSystemLogRequest{
+	systemLog.Request = &OktaSystemLogRequest{
 		IpChain:              req.IpChain,
 		AdditionalProperties: req.AdditionalProperties,
 	}
 
 	// SecurityContext info
 	securityContext := rawRow.GetSecurityContext()
-	systemLog.SecurityContext = &rows.OktaSystemLogSecurityContext{
+	systemLog.SecurityContext = &OktaSystemLogSecurityContext{
 		AsNumber:             securityContext.AsNumber,
 		AsOrg:                securityContext.AsOrg,
 		Domain:               securityContext.Domain,
@@ -132,7 +131,7 @@ func (s SystemLogMapper) Map(ctx context.Context, a any, _ ...table.MapOption[*r
 
 	// Transaction info
 	transaction := rawRow.GetTransaction()
-	systemLog.Transaction = &rows.OktaSystemLogTransaction{
+	systemLog.Transaction = &OktaSystemLogTransaction{
 		Detail:               transaction.Detail,
 		Id:                   transaction.Id,
 		Type:                 transaction.Type,

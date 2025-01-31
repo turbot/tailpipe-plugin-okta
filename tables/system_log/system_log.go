@@ -1,9 +1,10 @@
-package rows
+package system_log
 
 import (
 	"time"
 
 	"github.com/okta/okta-sdk-golang/v5/okta"
+
 	"github.com/turbot/tailpipe-plugin-sdk/schema"
 )
 

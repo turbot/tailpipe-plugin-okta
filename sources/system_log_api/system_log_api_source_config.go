@@ -1,4 +1,4 @@
-package sources
+package system_log_api
 
 import (
 	"github.com/hashicorp/hcl/v2"
