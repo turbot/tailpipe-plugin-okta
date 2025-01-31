@@ -2,16 +2,12 @@ module github.com/turbot/tailpipe-plugin-okta
 
 go 1.23.2
 
-replace github.com/turbot/tailpipe-plugin-sdk => ../tailpipe-plugin-sdk
-
-replace github.com/turbot/pipe-fittings => ../pipe-fittings
-
 require (
 	github.com/hashicorp/hcl/v2 v2.22.0
 	github.com/okta/okta-sdk-golang/v5 v5.0.2
 	github.com/rs/xid v1.6.0
 	github.com/turbot/go-kit v0.10.0-rc.0
-	github.com/turbot/tailpipe-plugin-sdk v0.0.0-00010101000000-000000000000
+	github.com/turbot/tailpipe-plugin-sdk v0.1.0
 )
 
 require (
